@@ -5,7 +5,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/auth/auth-context";
-import { ChevronRight, FileText, UserCheck, Buildings, Users } from "lucide-react";
+import { ChevronRight, FileText, UserCheck, Building, Users } from "lucide-react";
 
 const services = [
   {
@@ -23,7 +23,7 @@ const services = [
   {
     title: "Land Registry",
     description: "Register property transfers, obtain land ownership certificates and more.",
-    icon: Buildings,
+    icon: Building,
     href: "/services/land-registry",
   },
   {
