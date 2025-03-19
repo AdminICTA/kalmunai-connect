@@ -7,6 +7,7 @@ interface NavLinkProps {
   children: React.ReactNode;
   className?: string;
   activeClassName?: string;
+  onClick?: () => void; // Added onClick prop
 }
 
 export const NavLink = ({
@@ -14,6 +15,7 @@ export const NavLink = ({
   children,
   className,
   activeClassName,
+  onClick,
 }: NavLinkProps) => {
   const location = useLocation();
   const isActive = location.pathname === to;
@@ -27,6 +29,7 @@ export const NavLink = ({
         className,
         isActive && activeClassName
       )}
+      onClick={onClick} // Pass onClick to the Link component
     >
       {children}
     </Link>
