@@ -54,7 +54,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user?.name}</p>
+                      <p className="text-sm font-medium leading-none">{user?.username}</p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user?.email}
                       </p>
@@ -62,7 +62,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
-                    onClick={() => navigate(`/dashboard/${user?.role}`)}
+                    onClick={() => navigate(`/dashboard/${user?.role_id?.toLowerCase()}`)}
                     className="cursor-pointer"
                   >
                     Dashboard

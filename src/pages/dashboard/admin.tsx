@@ -200,7 +200,7 @@ const AdminDashboard = () => {
           <div className="flex flex-col space-y-2">
             <h1 className="text-3xl font-bold tracking-tight animate-fade-up">Admin Dashboard</h1>
             <p className="text-muted-foreground animate-fade-up" style={{ animationDelay: "0.1s" }}>
-              Welcome back, {user?.name}. Here's what's happening with the system.
+              Welcome back, {user?.username}. Here's what's happening with the system.
             </p>
           </div>
           

@@ -216,7 +216,7 @@ const EmployeeDashboard = () => {
           <div className="flex flex-col space-y-2">
             <h1 className="text-3xl font-bold tracking-tight animate-fade-up">Employee Dashboard</h1>
             <p className="text-muted-foreground animate-fade-up" style={{ animationDelay: "0.1s" }}>
-              Welcome back, {user?.name}. Manage your employee profile and requests.
+              Welcome back, {user?.username}. Manage your employee profile and requests.
             </p>
           </div>
           

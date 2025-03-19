@@ -226,7 +226,7 @@ const PublicDashboard = () => {
           <div className="flex flex-col space-y-2">
             <h1 className="text-3xl font-bold tracking-tight animate-fade-up">Citizen Portal</h1>
             <p className="text-muted-foreground animate-fade-up" style={{ animationDelay: "0.1s" }}>
-              Welcome, {user?.name}. Access government services and track your applications.
+              Welcome, {user?.username}. Access government services and track your applications.
             </p>
           </div>
           

@@ -65,7 +65,7 @@ const Index = () => {
                 {isAuthenticated ? (
                   <Button 
                     size="lg" 
-                    onClick={() => navigate(`/dashboard/${user?.role}`)}
+                    onClick={() => navigate(`/dashboard/${user?.role_id?.toLowerCase()}`)}
                     className="bg-kalmunai-blue hover:bg-kalmunai-blue/90 text-white"
                   >
                     Go to Dashboard
