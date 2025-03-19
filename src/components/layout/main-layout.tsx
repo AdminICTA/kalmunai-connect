@@ -1,5 +1,5 @@
 
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Logo } from "@/components/ui/logo";
 import { NavLink } from "@/components/ui/nav-link";
@@ -13,7 +13,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Settings } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { LogOut, User, Settings, Menu } from "lucide-react";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -22,10 +29,16 @@ interface MainLayoutProps {
 export const MainLayout = ({ children }: MainLayoutProps) => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  const getDashboardPath = () => {
+    if (!user?.role_id) return "/";
+    return `/dashboard/${user.role_id.toLowerCase()}`;
   };
 
   return (
@@ -62,7 +75,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
-                    onClick={() => navigate(`/dashboard/${user?.role_id?.toLowerCase()}`)}
+                    onClick={() => navigate(getDashboardPath())}
                     className="cursor-pointer"
                   >
                     Dashboard
@@ -92,27 +105,55 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
             )}
           </nav>
 
-          <Button 
-            variant="ghost" 
-            className="md:hidden"
-            onClick={() => {}}
-          >
-            <span className="sr-only">Toggle menu</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </Button>
+          {/* Mobile Menu */}
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="md:hidden"
+                onClick={() => setIsMobileMenuOpen(true)}
+              >
+                <span className="sr-only">Toggle menu</span>
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[80%]">
+              <SheetHeader>
+                <SheetTitle>Menu</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col space-y-4 mt-6">
+                <NavLink to="/" onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
+                <NavLink to="/services" onClick={() => setIsMobileMenuOpen(false)}>Services</NavLink>
+                <NavLink to="/about" onClick={() => setIsMobileMenuOpen(false)}>About</NavLink>
+                <NavLink to="/contact" onClick={() => setIsMobileMenuOpen(false)}>Contact</NavLink>
+                
+                {isAuthenticated ? (
+                  <>
+                    <NavLink to={getDashboardPath()} onClick={() => setIsMobileMenuOpen(false)}>Dashboard</NavLink>
+                    <NavLink to="/settings" onClick={() => setIsMobileMenuOpen(false)}>Settings</NavLink>
+                    <Button variant="outline" onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </Button>
+                  </>
+                ) : (
+                  <Button 
+                    onClick={() => {
+                      navigate("/login");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    variant="default"
+                    className="w-full"
+                  >
+                    Sign In
+                  </Button>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </header>
 

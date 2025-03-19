@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (authService.isAuthenticated()) {
           const currentUser = authService.getCurrentUser();
           setUser(currentUser);
+          console.log("User authenticated:", currentUser);
         }
       } catch (error) {
         console.error("Authentication error:", error);
@@ -60,7 +61,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Mock login for development using the actual database structure
         let mockUser: User;
         
-        if (usernameOrEmail.includes("icta") || usernameOrEmail.includes("farhana")) {
+        if (usernameOrEmail.includes("icta") || usernameOrEmail === "ICTA") {
           mockUser = { 
             id: "u1", 
             username: "ICTA", 
@@ -68,7 +69,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             role_id: "Admin",
             department_id: "ADM1"
           };
-        } else if (usernameOrEmail.includes("marliya")) {
+        } else if (usernameOrEmail.includes("farhana") || usernameOrEmail === "Farhana") {
+          mockUser = { 
+            id: "u2", 
+            username: "Farhana", 
+            email: "farhana@dskalmunai.com", 
+            role_id: "Admin",
+            department_id: "ADR1"
+          };
+        } else if (usernameOrEmail.includes("marliya") || usernameOrEmail === "Marliya") {
           mockUser = { 
             id: "u3", 
             username: "Marliya", 
@@ -90,12 +99,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await new Promise(resolve => setTimeout(resolve, 800));
         
         localStorage.setItem("user", JSON.stringify(mockUser));
+        localStorage.setItem("auth_token", "mock-token-" + Date.now());
         setUser(mockUser);
+        console.log("Mock login successful:", mockUser);
       } else {
         // Use the real authentication service for production
         const response = await authService.login(usernameOrEmail, password);
         if (response.success && response.user) {
           setUser(response.user as User);
+          console.log("Login successful:", response.user);
         } else {
           throw new Error(response.message || "Login failed");
         }
@@ -112,6 +124,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Use the auth service to handle logout
     authService.logout();
     setUser(null);
+    console.log("User logged out");
   };
 
   const value = {

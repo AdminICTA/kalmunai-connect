@@ -6,7 +6,7 @@
 // Base API URL - change this to your PHP backend URL when deployed
 export const API_BASE_URL = import.meta.env.PROD 
   ? 'https://dskalmunai.lk/api' 
-  : 'http://localhost:8000/api';
+  : 'http://localhost/dskalmunai/api';
 
 // API endpoints
 export const ENDPOINTS = {
@@ -35,5 +35,13 @@ export const ENDPOINTS = {
     ADMIN: `${API_BASE_URL}/stats/admin.php`,
     STAFF: `${API_BASE_URL}/stats/staff.php`,
     PUBLIC: `${API_BASE_URL}/stats/public.php`,
+  },
+  // Department endpoints
+  DEPARTMENTS: {
+    GET_ALL: `${API_BASE_URL}/departments/get-all.php`,
+    GET_BY_ID: (id: string) => `${API_BASE_URL}/departments/get-by-id.php?id=${id}`,
+    CREATE: `${API_BASE_URL}/departments/create.php`,
+    UPDATE: `${API_BASE_URL}/departments/update.php`,
+    DELETE: `${API_BASE_URL}/departments/delete.php`,
   }
 };

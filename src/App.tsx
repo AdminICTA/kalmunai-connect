@@ -15,7 +15,14 @@ import EmployeeDashboard from "./pages/dashboard/employee";
 import PublicDashboard from "./pages/dashboard/public";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 // Protected route component
 const ProtectedRoute = ({ children, requiredRole }: { children: React.ReactNode, requiredRole?: string | string[] }) => {
@@ -53,7 +60,7 @@ const AppRoutes = () => {
         path="/dashboard" 
         element={
           <Navigate 
-            to={user ? `/dashboard/${user.role_id.toLowerCase()}` : "/login"} 
+            to={user ? `/dashboard/${user.role_id?.toLowerCase()}` : "/login"} 
             replace 
           />
         } 
@@ -94,6 +101,19 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
+      
+      {/* Documentation route - will add more pages as needed */}
+      <Route path="/documentation" element={<div className="container py-8">Documentation</div>} />
+      <Route path="/services" element={<div className="container py-8">Services</div>} />
+      <Route path="/about" element={<div className="container py-8">About</div>} />
+      <Route path="/contact" element={<div className="container py-8">Contact</div>} />
+      <Route path="/privacy" element={<div className="container py-8">Privacy Policy</div>} />
+      <Route path="/terms" element={<div className="container py-8">Terms of Service</div>} />
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <div className="container py-8">Settings</div>
+        </ProtectedRoute>
+      } />
       
       {/* Catch-all route */}
       <Route path="*" element={<NotFound />} />
