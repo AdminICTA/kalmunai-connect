@@ -8,9 +8,10 @@ interface LoginResponse {
   token?: string;
   user?: {
     id: string;
-    name: string;
+    username: string;
     email: string;
-    role: string;
+    role_id: string;
+    department_id?: string;
   };
   message?: string;
 }
@@ -25,12 +26,12 @@ interface RegisterResponse {
  */
 class AuthService {
   /**
-   * Log in a user with email and password
+   * Log in a user with email/username and password
    */
-  async login(email: string, password: string): Promise<LoginResponse> {
+  async login(usernameOrEmail: string, password: string): Promise<LoginResponse> {
     try {
       const response = await apiService.post<LoginResponse>(ENDPOINTS.AUTH.LOGIN, {
-        email,
+        username_or_email: usernameOrEmail,
         password,
       });
 
@@ -54,10 +55,11 @@ class AuthService {
    * Register a new user
    */
   async register(userData: {
-    name: string;
+    username: string;
     email: string;
     password: string;
-    role?: string;
+    role_id?: string;
+    department_id?: string;
   }): Promise<RegisterResponse> {
     try {
       const response = await apiService.post<RegisterResponse>(ENDPOINTS.AUTH.REGISTER, userData);

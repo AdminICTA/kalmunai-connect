@@ -201,40 +201,42 @@ $jsonData = file_get_contents('php://input');
 $data = json_decode($jsonData, true);
 
 // Validate required fields
-if (!isset($data['email']) || !isset($data['password'])) {
-    sendResponse(['success' => false, 'message' => 'Email and password are required'], 400);
+if (!isset($data['username_or_email']) || !isset($data['password'])) {
+    sendResponse(['success' => false, 'message' => 'Username/email and password are required'], 400);
 }
 
 // Sanitize inputs
-$email = sanitizeInput($data['email']);
-$password = $data['password']; // Don't sanitize password before hashing
+$usernameOrEmail = sanitizeInput($data['username_or_email']);
+$password = $data['password']; // Don't sanitize password before verification
 
-// Query the database
-$stmt = $conn->prepare("SELECT id, name, email, password, role FROM users WHERE email = ?");
-$stmt->bind_param("s", $email);
+// Query the database - check if input matches username or email
+$stmt = $conn->prepare("SELECT id, username, email, password, role_id, department_id FROM users WHERE username = ? OR email = ?");
+$stmt->bind_param("ss", $usernameOrEmail, $usernameOrEmail);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
-    sendResponse(['success' => false, 'message' => 'Invalid email or password'], 401);
+    sendResponse(['success' => false, 'message' => 'Invalid username/email or password'], 401);
 }
 
 $user = $result->fetch_assoc();
 
-// Verify password
-if (!password_verify($password, $user['password'])) {
-    sendResponse(['success' => false, 'message' => 'Invalid email or password'], 401);
+// Simple password verification (for this example, we're using plaintext passwords as in your sample data)
+// In a production environment, you should use password_hash and password_verify
+if ($password !== $user['password']) {
+    sendResponse(['success' => false, 'message' => 'Invalid username/email or password'], 401);
 }
 
 // Generate JWT token
-$token = generateJWT($user['id'], $user['role']);
+$token = generateJWT($user['id'], $user['role_id']);
 
 // Prepare user data for response (exclude password)
 $userData = [
     'id' => $user['id'],
-    'name' => $user['name'],
+    'username' => $user['username'],
     'email' => $user['email'],
-    'role' => $user['role']
+    'role_id' => $user['role_id'],
+    'department_id' => $user['department_id']
 ];
 
 // Send successful response with token and user data
@@ -269,7 +271,7 @@ RewriteRule ^(.*)$ $1 [R=200,L]
 
 1. Use prepared statements for all database queries to prevent SQL injection
 2. Validate and sanitize all user inputs
-3. Store passwords using password_hash() and verify with password_verify()
+3. In production, use password_hash() to store passwords and password_verify() to check them
 4. Implement proper JWT token validation
 5. Set up HTTPS for all API endpoints
 6. Consider implementing rate limiting to prevent brute force attacks
@@ -284,22 +286,26 @@ RewriteRule ^(.*)$ $1 [R=200,L]
 
 ## Database Schema Example
 
-Here's a basic SQL schema for the users table:
+Your provided users schema:
 
 ```sql
-CREATE TABLE users (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'staff', 'employee', 'public') NOT NULL DEFAULT 'public',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+CREATE TABLE `users` (
+  `id` varchar(36) COLLATE utf8mb3_unicode_ci NOT NULL,
+  `username` varchar(50) COLLATE utf8mb3_unicode_ci NOT NULL,
+  `email` varchar(100) COLLATE utf8mb3_unicode_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb3_unicode_ci NOT NULL,
+  `role_id` varchar(36) COLLATE utf8mb3_unicode_ci NOT NULL,
+  `department_id` varchar(36) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 
--- Create an admin user (password: admin123)
-INSERT INTO users (name, email, password, role) 
-VALUES ('Admin User', 'admin@dskalmunai.lk', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+-- Sample data for users table
+INSERT INTO `users` (`id`, `username`, `email`, `password`, `role_id`, `department_id`, `created_at`, `updated_at`) VALUES
+('u1', 'ICTA', 'icta@dskalmunai.com', '1993', 'Admin', 'ADM1', NULL, NULL),
+('u2', 'Farhana', 'farhana@dskalmunai.com', '0726', 'Admin', 'ADR1', NULL, NULL),
+('u3', 'Marliya', 'marliya@dskalmunai.com', '1966', 'User', 'ACC1', NULL, NULL),
+('u4', 'Maya', 'maya@dskalmunai.com', '1991', 'User', 'NIC1', NULL, NULL);
 ```
 
 ---

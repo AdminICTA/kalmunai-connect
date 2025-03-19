@@ -31,8 +31,9 @@ const ProtectedRoute = ({ children, requiredRole }: { children: React.ReactNode,
 
   if (requiredRole) {
     const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    if (user?.role && !roles.includes(user.role)) {
-      return <Navigate to={`/dashboard/${user.role}`} />;
+    if (user?.role_id && !roles.includes(user.role_id)) {
+      // Redirect based on role_id from our database structure
+      return <Navigate to={`/dashboard/${user.role_id.toLowerCase()}`} />;
     }
   }
 
@@ -52,7 +53,7 @@ const AppRoutes = () => {
         path="/dashboard" 
         element={
           <Navigate 
-            to={user ? `/dashboard/${user.role}` : "/login"} 
+            to={user ? `/dashboard/${user.role_id.toLowerCase()}` : "/login"} 
             replace 
           />
         } 
@@ -61,7 +62,7 @@ const AppRoutes = () => {
       <Route 
         path="/dashboard/admin" 
         element={
-          <ProtectedRoute requiredRole="admin">
+          <ProtectedRoute requiredRole="Admin">
             <AdminDashboard />
           </ProtectedRoute>
         } 
@@ -70,7 +71,7 @@ const AppRoutes = () => {
       <Route 
         path="/dashboard/staff" 
         element={
-          <ProtectedRoute requiredRole="staff">
+          <ProtectedRoute requiredRole="Staff">
             <StaffDashboard />
           </ProtectedRoute>
         } 
@@ -79,16 +80,16 @@ const AppRoutes = () => {
       <Route 
         path="/dashboard/employee" 
         element={
-          <ProtectedRoute requiredRole={["staff", "employee"]}>
+          <ProtectedRoute requiredRole={["Admin", "Staff", "User"]}>
             <EmployeeDashboard />
           </ProtectedRoute>
         } 
       />
       
       <Route 
-        path="/dashboard/public" 
+        path="/dashboard/user" 
         element={
-          <ProtectedRoute requiredRole="public">
+          <ProtectedRoute requiredRole="User">
             <PublicDashboard />
           </ProtectedRoute>
         } 

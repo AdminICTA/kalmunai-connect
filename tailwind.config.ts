@@ -64,11 +64,12 @@ export default {
           ring: 'hsl(var(--sidebar-ring))'
         },
         kalmunai: {
-          blue: '#1e5c97',
-          green: '#276749',
-          gold: '#f59e0b',
-          navy: '#0f3860',
-          light: '#f8fafc'
+          darkNavy: '#13272E',  // Dark navy blue
+          teal: '#487674',      // Teal
+          lightTeal: '#83B4AE', // Light teal
+          sand: '#E8C69B',      // Sand/beige
+          copper: '#D69369',    // Copper/light orange
+          orange: '#CB6330'     // Orange
         }
       },
       borderRadius: {
@@ -131,7 +132,9 @@ export default {
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-subtle': 'linear-gradient(to right bottom, rgb(249, 250, 251), rgb(243, 244, 246))'
+        'gradient-subtle': 'linear-gradient(to right bottom, rgb(249, 250, 251), rgb(243, 244, 246))',
+        'gradient-kalmunai': 'linear-gradient(to right, #13272E, #487674)',
+        'gradient-accent': 'linear-gradient(to right, #E8C69B, #CB6330)'
       }
     }
   },

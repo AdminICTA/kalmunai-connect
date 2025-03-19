@@ -3,25 +3,25 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { authService } from "@/services/auth-service";
 import { toast } from "sonner";
 
-export type UserRole = "admin" | "staff" | "employee" | "public" | null;
+export type UserRole = "Admin" | "Staff" | "User" | null;
 
 interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
-  role: UserRole;
+  role_id: UserRole;
+  department_id?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (usernameOrEmail: string, password: string) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
   isStaff: boolean;
-  isEmployee: boolean;
-  isPublic: boolean;
+  isUser: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -52,22 +52,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (usernameOrEmail: string, password: string) => {
     setIsLoading(true);
     try {
-      // In development mode, still use the mock login for testing
+      // In development mode, still use the mock login for testing if not using real API
       if (process.env.NODE_ENV === 'development' && !import.meta.env.VITE_USE_REAL_API) {
-        // Mock login for development
+        // Mock login for development using the actual database structure
         let mockUser: User;
         
-        if (email.includes("admin")) {
-          mockUser = { id: "1", name: "Admin User", email, role: "admin" };
-        } else if (email.includes("staff")) {
-          mockUser = { id: "2", name: "Staff User", email, role: "staff" };
-        } else if (email.includes("employee")) {
-          mockUser = { id: "3", name: "Employee User", email, role: "employee" };
+        if (usernameOrEmail.includes("icta") || usernameOrEmail.includes("farhana")) {
+          mockUser = { 
+            id: "u1", 
+            username: "ICTA", 
+            email: "icta@dskalmunai.com", 
+            role_id: "Admin",
+            department_id: "ADM1"
+          };
+        } else if (usernameOrEmail.includes("marliya")) {
+          mockUser = { 
+            id: "u3", 
+            username: "Marliya", 
+            email: "marliya@dskalmunai.com", 
+            role_id: "User",
+            department_id: "ACC1"
+          };
         } else {
-          mockUser = { id: "4", name: "Public User", email, role: "public" };
+          mockUser = { 
+            id: "u4", 
+            username: "Maya", 
+            email: "maya@dskalmunai.com", 
+            role_id: "User",
+            department_id: "NIC1"
+          };
         }
         
         // Simulate API call
@@ -77,7 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(mockUser);
       } else {
         // Use the real authentication service for production
-        const response = await authService.login(email, password);
+        const response = await authService.login(usernameOrEmail, password);
         if (response.success && response.user) {
           setUser(response.user as User);
         } else {
@@ -104,10 +120,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isLoading,
     login,
     logout,
-    isAdmin: user?.role === "admin",
-    isStaff: user?.role === "staff",
-    isEmployee: user?.role === "employee",
-    isPublic: user?.role === "public",
+    isAdmin: user?.role_id === "Admin",
+    isStaff: user?.role_id === "Staff",
+    isUser: user?.role_id === "User",
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
