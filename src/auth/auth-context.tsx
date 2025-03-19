@@ -1,5 +1,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
+import { authService } from "@/services/auth-service";
+import { toast } from "sonner";
 
 export type UserRole = "admin" | "staff" | "employee" | "public" | null;
 
@@ -28,17 +30,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mock function to simulate checking for existing session
+  // Check for existing session on component mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // In a real app, you would check for an existing session here
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+        setIsLoading(true);
+        
+        // Check if the user is authenticated using our service
+        if (authService.isAuthenticated()) {
+          const currentUser = authService.getCurrentUser();
+          setUser(currentUser);
         }
       } catch (error) {
         console.error("Authentication error:", error);
+        toast.error("Session verification failed");
       } finally {
         setIsLoading(false);
       }
@@ -50,25 +55,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock login - in a real app, you would call your API here
-      // This is just for demonstration purposes
-      let mockUser: User;
-      
-      if (email.includes("admin")) {
-        mockUser = { id: "1", name: "Admin User", email, role: "admin" };
-      } else if (email.includes("staff")) {
-        mockUser = { id: "2", name: "Staff User", email, role: "staff" };
-      } else if (email.includes("employee")) {
-        mockUser = { id: "3", name: "Employee User", email, role: "employee" };
+      // In development mode, still use the mock login for testing
+      if (process.env.NODE_ENV === 'development' && !import.meta.env.VITE_USE_REAL_API) {
+        // Mock login for development
+        let mockUser: User;
+        
+        if (email.includes("admin")) {
+          mockUser = { id: "1", name: "Admin User", email, role: "admin" };
+        } else if (email.includes("staff")) {
+          mockUser = { id: "2", name: "Staff User", email, role: "staff" };
+        } else if (email.includes("employee")) {
+          mockUser = { id: "3", name: "Employee User", email, role: "employee" };
+        } else {
+          mockUser = { id: "4", name: "Public User", email, role: "public" };
+        }
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        localStorage.setItem("user", JSON.stringify(mockUser));
+        setUser(mockUser);
       } else {
-        mockUser = { id: "4", name: "Public User", email, role: "public" };
+        // Use the real authentication service for production
+        const response = await authService.login(email, password);
+        if (response.success && response.user) {
+          setUser(response.user as User);
+        } else {
+          throw new Error(response.message || "Login failed");
+        }
       }
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      localStorage.setItem("user", JSON.stringify(mockUser));
-      setUser(mockUser);
     } catch (error) {
       console.error("Login error:", error);
       throw new Error("Login failed");
@@ -78,7 +93,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem("user");
+    // Use the auth service to handle logout
+    authService.logout();
     setUser(null);
   };
 
