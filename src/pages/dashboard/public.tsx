@@ -2,79 +2,87 @@
 import { useState } from "react";
 import { useAuth } from "@/auth/auth-context";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/ui/modal-form";
 import { Input } from "@/components/ui/input";
 import { 
-  User, 
+  BarChart3, 
   FileText, 
-  History, 
-  Settings,
-  Building,
-  MessageSquare,
+  User, 
+  MessageCircle, 
   CreditCard,
+  Clock,
   Download,
-  Mail
+  History,
+  Settings,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
-import { TabsContent } from "@/components/ui/tabs";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import QRCode from "qrcode.react";
 
-// Placeholder component for stats
+// Stats Grid component
 const StatsGrid = () => {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card className="glass-card animate-fade-up">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Active Requests</CardTitle>
+          <CardTitle className="text-sm font-medium">Requests</CardTitle>
           <FileText className="h-4 w-4 text-primary" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">4</div>
+          <p className="text-xs text-muted-foreground">
+            2 pending, 2 completed
+          </p>
+        </CardContent>
+      </Card>
+      
+      <Card className="glass-card animate-fade-up" style={{ animationDelay: "0.1s" }}>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Messages</CardTitle>
+          <MessageCircle className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">3</div>
           <p className="text-xs text-muted-foreground">
-            +1 new this week
+            1 unread message
           </p>
         </CardContent>
       </Card>
-      <Card className="glass-card animate-fade-up" style={{ animationDelay: "0.1s" }}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Completed Services</CardTitle>
-          <History className="h-4 w-4 text-primary" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">12</div>
-          <p className="text-xs text-muted-foreground">
-            +3 last month
-          </p>
-        </CardContent>
-      </Card>
+      
       <Card className="glass-card animate-fade-up" style={{ animationDelay: "0.2s" }}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Unread Messages</CardTitle>
-          <MessageSquare className="h-4 w-4 text-primary" />
+          <CardTitle className="text-sm font-medium">Forms</CardTitle>
+          <Download className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">2</div>
+          <div className="text-2xl font-bold">5</div>
           <p className="text-xs text-muted-foreground">
-            +1 new notification
+            Available to download
           </p>
         </CardContent>
       </Card>
+      
       <Card className="glass-card animate-fade-up" style={{ animationDelay: "0.3s" }}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Payments Due</CardTitle>
+          <CardTitle className="text-sm font-medium">Payments</CardTitle>
           <CreditCard className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">Rs 1,200</div>
+          <div className="text-2xl font-bold">₹0</div>
           <p className="text-xs text-muted-foreground">
-            Birth certificate fee
+            No pending payments
           </p>
         </CardContent>
       </Card>
@@ -82,142 +90,244 @@ const StatsGrid = () => {
   );
 };
 
-// Department services component
-const DepartmentServices = () => {
-  const [isRequestServiceOpen, setIsRequestServiceOpen] = useState(false);
+// Service Requests component
+const ServiceRequests = () => {
+  const { user } = useAuth();
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [isViewRequestModalOpen, setIsViewRequestModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
   
   // Service request schema
-  const serviceSchema = z.object({
+  const requestFormSchema = z.object({
     service_id: z.string().min(1, "Service is required"),
-    department_id: z.string().min(1, "Department is required"),
-    details: z.string().min(5, "Details must be at least 5 characters"),
+    description: z.string().min(5, "Description must be at least 5 characters"),
+    contact_number: z.string().min(10, "Contact number must be at least 10 digits"),
   });
   
-  // Service request form
-  const serviceForm = useForm<z.infer<typeof serviceSchema>>({
-    resolver: zodResolver(serviceSchema),
+  // Form for requesting a service
+  const requestForm = useForm<z.infer<typeof requestFormSchema>>({
+    resolver: zodResolver(requestFormSchema),
     defaultValues: {
       service_id: "",
-      department_id: "",
-      details: "",
+      description: "",
+      contact_number: "",
     },
   });
   
-  // Handle service request submission
-  const onSubmitServiceRequest = (data: z.infer<typeof serviceSchema>) => {
-    console.log("Service request:", data);
+  // Function to handle service request
+  const onRequestService = (data: z.infer<typeof requestFormSchema>) => {
+    const newRequest = {
+      request_id: "req_" + Date.now().toString(),
+      public_user_id: user?.id || "",
+      service_id: data.service_id,
+      service_name: services.find(s => s.id === data.service_id)?.name || "",
+      description: data.description,
+      contact_number: data.contact_number,
+      status: "Pending",
+      submitted_date: new Date(),
+    };
+    
+    console.log("Requesting service:", newRequest);
+    
+    // For demo, add to our mock data
+    setServiceRequests([...serviceRequests, newRequest]);
+    
     toast.success("Service request submitted successfully");
-    setIsRequestServiceOpen(false);
-    serviceForm.reset();
+    setIsRequestModalOpen(false);
+    requestForm.reset();
   };
   
-  // Placeholder data for services departments
-  const departments = [
-    {
-      id: "dept1",
-      name: "Civil Registry",
-      icon: FileText,
-      services: [
-        { id: "serv1", name: "Birth Certificate" },
-        { id: "serv2", name: "Death Certificate" },
-        { id: "serv3", name: "Marriage Certificate" },
-        { id: "serv4", name: "ID Card Application" }
-      ]
-    },
-    {
-      id: "dept2",
-      name: "Land Administration",
-      icon: Building,
-      services: [
-        { id: "serv5", name: "Land Ownership Certificate" },
-        { id: "serv6", name: "Property Transfer" },
-        { id: "serv7", name: "Land Disputes" },
-        { id: "serv8", name: "Building Permits" }
-      ]
-    },
-    {
-      id: "dept3",
-      name: "Social Services",
-      icon: User,
-      services: [
-        { id: "serv9", name: "Financial Assistance" },
-        { id: "serv10", name: "Community Development" },
-        { id: "serv11", name: "Elder Care Services" },
-        { id: "serv12", name: "Youth Programs" }
-      ]
-    }
+  // Function to view request details
+  const handleViewRequest = (request: any) => {
+    setSelectedRequest(request);
+    setIsViewRequestModalOpen(true);
+  };
+  
+  // Mock services data
+  const services = [
+    { id: "serv1", name: "Birth Certificate" },
+    { id: "serv2", name: "Marriage Certificate" },
+    { id: "serv3", name: "Land Title" },
+    { id: "serv4", name: "Financial Aid" },
+    { id: "serv5", name: "ID Card Renewal" },
   ];
+  
+  // Mock service requests data
+  const [serviceRequests, setServiceRequests] = useState([
+    {
+      request_id: "req_1",
+      public_user_id: "pub_1",
+      service_id: "serv1",
+      service_name: "Birth Certificate",
+      description: "Request for new birth certificate",
+      contact_number: "0776543210",
+      status: "Completed",
+      submitted_date: new Date(2023, 5, 15),
+      completed_date: new Date(2023, 5, 20),
+    },
+    {
+      request_id: "req_2",
+      public_user_id: "pub_1",
+      service_id: "serv3",
+      service_name: "Land Title",
+      description: "Request for land title verification",
+      contact_number: "0776543210",
+      status: "Processing",
+      submitted_date: new Date(2023, 7, 10),
+    },
+    {
+      request_id: "req_3",
+      public_user_id: "pub_1",
+      service_id: "serv2",
+      service_name: "Marriage Certificate",
+      description: "Request for copy of marriage certificate",
+      contact_number: "0776543210",
+      status: "Pending",
+      submitted_date: new Date(2023, 8, 5),
+    },
+    {
+      request_id: "req_4",
+      public_user_id: "pub_1",
+      service_id: "serv4",
+      service_name: "Financial Aid",
+      description: "Application for financial assistance program",
+      contact_number: "0776543210",
+      status: "Completed",
+      submitted_date: new Date(2023, 6, 1),
+      completed_date: new Date(2023, 6, 15),
+    },
+  ]);
+  
+  // Status badge colors
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Completed":
+        return "bg-green-500 hover:bg-green-600";
+      case "Processing":
+        return "bg-blue-500 hover:bg-blue-600";
+      case "Pending":
+        return "bg-yellow-500 hover:bg-yellow-600";
+      case "Rejected":
+        return "bg-red-500 hover:bg-red-600";
+      default:
+        return "bg-gray-500 hover:bg-gray-600";
+    }
+  };
   
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Available Services</h2>
-        <Button onClick={() => setIsRequestServiceOpen(true)} className="bg-primary text-white">
+        <h2 className="text-xl font-bold">Service Requests</h2>
+        <Button onClick={() => setIsRequestModalOpen(true)} className="bg-primary text-white">
           <FileText className="h-4 w-4 mr-2" />
           Request Service
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {departments.map((dept) => (
-          <Card key={dept.id} className="glass-card group hover:border-primary/50 transition-all">
-            <CardHeader>
-              <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <dept.icon className="h-5 w-5 text-primary" />
-                </div>
-                <CardTitle className="text-lg">{dept.name}</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 mb-4">
-                {dept.services.map((service) => (
-                  <li key={service.id} className="flex items-center text-sm">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary/40 mr-2"></div>
-                    {service.name}
-                  </li>
-                ))}
-              </ul>
-              <Button className="w-full bg-primary text-white">
-                View Services
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="glass-card">
+          <CardContent className="p-4 flex flex-col items-center justify-center">
+            <div className="rounded-full bg-yellow-100 p-3 mb-2">
+              <Clock className="h-5 w-5 text-yellow-600" />
+            </div>
+            <h3 className="font-medium">Pending</h3>
+            <p className="text-2xl font-bold">1</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="glass-card">
+          <CardContent className="p-4 flex flex-col items-center justify-center">
+            <div className="rounded-full bg-blue-100 p-3 mb-2">
+              <AlertCircle className="h-5 w-5 text-blue-600" />
+            </div>
+            <h3 className="font-medium">Processing</h3>
+            <p className="text-2xl font-bold">1</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="glass-card">
+          <CardContent className="p-4 flex flex-col items-center justify-center">
+            <div className="rounded-full bg-green-100 p-3 mb-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+            </div>
+            <h3 className="font-medium">Completed</h3>
+            <p className="text-2xl font-bold">2</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="glass-card">
+          <CardContent className="p-4 flex flex-col items-center justify-center">
+            <div className="rounded-full bg-muted p-3 mb-2">
+              <History className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <h3 className="font-medium">Total</h3>
+            <p className="text-2xl font-bold">4</p>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Service Requests Table */}
+      <div className="border rounded-lg overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-muted">
+              <th className="px-4 py-3 text-left font-medium">Service</th>
+              <th className="px-4 py-3 text-left font-medium">Submitted</th>
+              <th className="px-4 py-3 text-left font-medium">Status</th>
+              <th className="px-4 py-3 text-left font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {serviceRequests.map((request) => (
+              <tr key={request.request_id} className="border-t">
+                <td className="px-4 py-3">{request.service_name}</td>
+                <td className="px-4 py-3">{format(request.submitted_date, "MMM dd, yyyy")}</td>
+                <td className="px-4 py-3">
+                  <Badge className={getStatusColor(request.status)}>
+                    {request.status}
+                  </Badge>
+                </td>
+                <td className="px-4 py-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleViewRequest(request)}
+                  >
+                    View Details
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
       
       {/* Request Service Modal */}
       <ModalForm
         title="Request Service"
         description="Submit a new service request"
-        open={isRequestServiceOpen}
-        onOpenChange={setIsRequestServiceOpen}
+        open={isRequestModalOpen}
+        onOpenChange={setIsRequestModalOpen}
       >
-        <Form {...serviceForm}>
-          <form onSubmit={serviceForm.handleSubmit(onSubmitServiceRequest)} className="space-y-4">
+        <Form {...requestForm}>
+          <form onSubmit={requestForm.handleSubmit(onRequestService)} className="space-y-4">
             <FormField
-              control={serviceForm.control}
-              name="department_id"
+              control={requestForm.control}
+              name="service_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Department</FormLabel>
-                  <Select 
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      // Reset service when department changes
-                      serviceForm.setValue("service_id", "");
-                    }} 
-                    defaultValue={field.value}
-                  >
+                  <FormLabel>Service Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select department" />
+                        <SelectValue placeholder="Select service" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {departments.map(dept => (
-                        <SelectItem key={dept.id} value={dept.id}>
-                          {dept.name}
+                      {services.map(service => (
+                        <SelectItem key={service.id} value={service.id}>
+                          {service.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -228,48 +338,16 @@ const DepartmentServices = () => {
             />
             
             <FormField
-              control={serviceForm.control}
-              name="service_id"
+              control={requestForm.control}
+              name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Service</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                    disabled={!serviceForm.watch("department_id")}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={serviceForm.watch("department_id") ? "Select service" : "Select department first"} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {serviceForm.watch("department_id") && 
-                        departments
-                          .find(d => d.id === serviceForm.watch("department_id"))
-                          ?.services.map(service => (
-                            <SelectItem key={service.id} value={service.id}>
-                              {service.name}
-                            </SelectItem>
-                          ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={serviceForm.control}
-              name="details"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Additional Details</FormLabel>
+                  <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Enter any additional details or requirements" 
-                      className="min-h-[100px]" 
-                      {...field} 
+                    <Textarea
+                      placeholder="Please provide details about your request"
+                      className="min-h-[80px]"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -277,13 +355,27 @@ const DepartmentServices = () => {
               )}
             />
             
+            <FormField
+              control={requestForm.control}
+              name="contact_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contact Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter contact number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <div className="flex justify-end space-x-2 pt-2">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => {
-                  setIsRequestServiceOpen(false);
-                  serviceForm.reset();
+                  setIsRequestModalOpen(false);
+                  requestForm.reset();
                 }}
               >
                 Cancel
@@ -295,560 +387,223 @@ const DepartmentServices = () => {
           </form>
         </Form>
       </ModalForm>
-    </div>
-  );
-};
-
-// History component
-const HistoryComponent = () => {
-  // Placeholder data for service history
-  const serviceHistory = [
-    {
-      id: "SRV-2023-001",
-      service: "Birth Certificate",
-      department: "Civil Registry",
-      requestedDate: "2023-04-15",
-      status: "Completed",
-      statusClass: "bg-green-100 text-green-800"
-    },
-    {
-      id: "SRV-2023-045",
-      service: "Land Ownership Certificate",
-      department: "Land Administration",
-      requestedDate: "2023-05-20",
-      status: "Processing",
-      statusClass: "bg-blue-100 text-blue-800"
-    },
-    {
-      id: "SRV-2023-078",
-      service: "ID Card Application",
-      department: "Civil Registry",
-      requestedDate: "2023-06-10",
-      status: "Pending Verification",
-      statusClass: "bg-yellow-100 text-yellow-800"
-    }
-  ];
-  
-  return (
-    <Card className="glass-card">
-      <CardHeader>
-        <CardTitle>Service History</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="border rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-muted">
-                <th className="px-4 py-3 text-left font-medium">Request ID</th>
-                <th className="px-4 py-3 text-left font-medium">Service</th>
-                <th className="px-4 py-3 text-left font-medium">Department</th>
-                <th className="px-4 py-3 text-left font-medium">Requested Date</th>
-                <th className="px-4 py-3 text-left font-medium">Status</th>
-                <th className="px-4 py-3 text-left font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {serviceHistory.map((item) => (
-                <tr key={item.id} className="border-t">
-                  <td className="px-4 py-3 font-medium">{item.id}</td>
-                  <td className="px-4 py-3">{item.service}</td>
-                  <td className="px-4 py-3">{item.department}</td>
-                  <td className="px-4 py-3">{item.requestedDate}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${item.statusClass}`}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Button variant="ghost" size="sm">View Details</Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Forms component
-const FormsComponent = () => {
-  // Placeholder data for available forms
-  const availableForms = [
-    { 
-      id: "form1", 
-      name: "Birth Certificate Application", 
-      department: "Civil Registry",
-      format: "PDF",
-      size: "125 KB"
-    },
-    { 
-      id: "form2", 
-      name: "Marriage Certificate Application", 
-      department: "Civil Registry",
-      format: "PDF",
-      size: "118 KB"
-    },
-    { 
-      id: "form3", 
-      name: "Land Ownership Certificate Application", 
-      department: "Land Administration",
-      format: "PDF",
-      size: "210 KB"
-    },
-    { 
-      id: "form4", 
-      name: "Financial Assistance Application", 
-      department: "Social Services",
-      format: "PDF",
-      size: "185 KB"
-    }
-  ];
-  
-  return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold">Available Forms</h2>
       
-      <div className="border rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-muted">
-              <th className="px-4 py-3 text-left font-medium">Form Name</th>
-              <th className="px-4 py-3 text-left font-medium">Department</th>
-              <th className="px-4 py-3 text-left font-medium">Format</th>
-              <th className="px-4 py-3 text-left font-medium">Size</th>
-              <th className="px-4 py-3 text-left font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {availableForms.map((form) => (
-              <tr key={form.id} className="border-t">
-                <td className="px-4 py-3">{form.name}</td>
-                <td className="px-4 py-3">{form.department}</td>
-                <td className="px-4 py-3">{form.format}</td>
-                <td className="px-4 py-3">{form.size}</td>
-                <td className="px-4 py-3">
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
-                      <Download className="h-3 w-3 mr-1" />
-                      Download
-                    </Button>
-                    <Button variant="outline" size="sm">Fill Online</Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-// Messages component
-const MessagesComponent = () => {
-  // Placeholder messages data
-  const messages = [
-    {
-      id: "msg1",
-      title: "Birth Certificate Application Update",
-      content: "Your application has been processed and is ready for collection.",
-      sender: "Civil Registry Department",
-      date: "2 hours ago",
-      read: false,
-      icon: FileText,
-      iconClass: "bg-blue-100 text-blue-600"
-    },
-    {
-      id: "msg2",
-      title: "Profile Verification",
-      content: "Your profile has been successfully verified.",
-      sender: "Admin Department",
-      date: "Yesterday",
-      read: false,
-      icon: User,
-      iconClass: "bg-green-100 text-green-600"
-    },
-    {
-      id: "msg3",
-      title: "New Service Available",
-      content: "A new online service for property tax payments is now available.",
-      sender: "Land Administration Department",
-      date: "3 days ago",
-      read: true,
-      icon: Building,
-      iconClass: "bg-amber-100 text-amber-600"
-    }
-  ];
-  
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Messages & Notifications</h2>
-        <Button variant="outline">
-          <Mail className="h-4 w-4 mr-2" />
-          Mark All as Read
-        </Button>
-      </div>
-      
-      <div className="space-y-4">
-        {messages.map((message) => (
-          <Card key={message.id} className={`glass-card ${!message.read ? 'border-l-4 border-l-primary' : ''}`}>
-            <CardContent className="p-4">
-              <div className="flex">
-                <div className={`w-10 h-10 rounded-full ${message.iconClass} flex items-center justify-center mr-4 flex-shrink-0`}>
-                  <message.icon className="h-5 w-5" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-medium">{message.title}</h3>
-                    <span className="text-xs text-muted-foreground">{message.date}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">{message.content}</p>
-                  <p className="text-xs text-muted-foreground mt-2">From: {message.sender}</p>
-                  
-                  <div className="flex justify-end mt-2">
-                    <Button variant="ghost" size="sm">View Details</Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Payments component
-const PaymentsComponent = () => {
-  const [isPayModalOpen, setIsPayModalOpen] = useState(false);
-  
-  // Placeholder data for payments
-  const pendingPayments = [
-    {
-      id: "pay1",
-      service: "Birth Certificate",
-      amount: 1200,
-      dueDate: "2023-08-15",
-      reference: "BC-2023-124"
-    }
-  ];
-  
-  // Payment history
-  const paymentHistory = [
-    {
-      id: "hist1",
-      service: "Marriage Certificate",
-      amount: 2500,
-      date: "2023-06-10",
-      reference: "MC-2023-089",
-      status: "Completed"
-    },
-    {
-      id: "hist2",
-      service: "Land Registration",
-      amount: 5000,
-      date: "2023-04-22",
-      reference: "LR-2023-056",
-      status: "Completed"
-    }
-  ];
-  
-  // Payment form schema
-  const paymentSchema = z.object({
-    card_number: z.string().min(16, "Card number must be at least 16 digits"),
-    expiry_date: z.string().min(5, "Expiry date is required"),
-    cvv: z.string().min(3, "CVV must be at least 3 digits"),
-    name: z.string().min(2, "Name is required"),
-  });
-  
-  // Payment form
-  const paymentForm = useForm<z.infer<typeof paymentSchema>>({
-    resolver: zodResolver(paymentSchema),
-    defaultValues: {
-      card_number: "",
-      expiry_date: "",
-      cvv: "",
-      name: "",
-    },
-  });
-  
-  // Handle payment submission
-  const onSubmitPayment = (data: z.infer<typeof paymentSchema>) => {
-    console.log("Payment details:", data);
-    toast.success("Payment processed successfully");
-    setIsPayModalOpen(false);
-    paymentForm.reset();
-  };
-  
-  return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold">Payments</h2>
-      
-      {pendingPayments.length > 0 ? (
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle>Pending Payments</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {pendingPayments.map((payment) => (
-                <div key={payment.id} className="flex justify-between items-center p-4 border rounded-lg">
-                  <div>
-                    <h3 className="font-medium">{payment.service}</h3>
-                    <p className="text-sm text-muted-foreground">Ref: {payment.reference}</p>
-                    <p className="text-sm text-muted-foreground">Due: {payment.dueDate}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold">Rs {payment.amount.toLocaleString()}</div>
-                    <Button 
-                      onClick={() => setIsPayModalOpen(true)} 
-                      className="mt-2 bg-primary text-white"
-                    >
-                      Pay Now
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="glass-card">
-          <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground">No pending payments at this time.</p>
-          </CardContent>
-        </Card>
-      )}
-      
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle>Payment History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="border rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-muted">
-                  <th className="px-4 py-3 text-left font-medium">Service</th>
-                  <th className="px-4 py-3 text-left font-medium">Reference</th>
-                  <th className="px-4 py-3 text-left font-medium">Date</th>
-                  <th className="px-4 py-3 text-right font-medium">Amount</th>
-                  <th className="px-4 py-3 text-left font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paymentHistory.map((payment) => (
-                  <tr key={payment.id} className="border-t">
-                    <td className="px-4 py-3">{payment.service}</td>
-                    <td className="px-4 py-3">{payment.reference}</td>
-                    <td className="px-4 py-3">{payment.date}</td>
-                    <td className="px-4 py-3 text-right">Rs {payment.amount.toLocaleString()}</td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-800">
-                        {payment.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Payment Modal */}
+      {/* View Request Modal */}
       <ModalForm
-        title="Make Payment"
-        description="Enter your card details to complete the payment"
-        open={isPayModalOpen}
-        onOpenChange={setIsPayModalOpen}
+        title="Service Request Details"
+        description="View details of your service request"
+        open={isViewRequestModalOpen}
+        onOpenChange={setIsViewRequestModalOpen}
       >
-        {pendingPayments.length > 0 && (
-          <div className="mb-4 p-3 bg-muted rounded-lg">
-            <div className="flex justify-between">
-              <span>Service:</span>
-              <span className="font-medium">{pendingPayments[0].service}</span>
+        {selectedRequest && (
+          <div className="space-y-4">
+            <div className="flex justify-center mb-4">
+              <Badge className={`${getStatusColor(selectedRequest.status)} px-4 py-2 text-base`}>
+                {selectedRequest.status}
+              </Badge>
             </div>
-            <div className="flex justify-between">
-              <span>Reference:</span>
-              <span className="font-medium">{pendingPayments[0].reference}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Amount:</span>
-              <span className="font-medium">Rs {pendingPayments[0].amount.toLocaleString()}</span>
-            </div>
-          </div>
-        )}
-        
-        <Form {...paymentForm}>
-          <form onSubmit={paymentForm.handleSubmit(onSubmitPayment)} className="space-y-4">
-            <FormField
-              control={paymentForm.control}
-              name="card_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Card Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="1234 5678 9012 3456" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={paymentForm.control}
-                name="expiry_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Expiry Date</FormLabel>
-                    <FormControl>
-                      <Input placeholder="MM/YY" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-4 py-1 border-b">
+                <div className="text-sm font-medium">Service:</div>
+                <div className="text-sm col-span-2">{selectedRequest.service_name}</div>
+              </div>
               
-              <FormField
-                control={paymentForm.control}
-                name="cvv"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>CVV</FormLabel>
-                    <FormControl>
-                      <Input placeholder="123" type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-3 gap-4 py-1 border-b">
+                <div className="text-sm font-medium">Submitted On:</div>
+                <div className="text-sm col-span-2">{format(selectedRequest.submitted_date, "MMM dd, yyyy")}</div>
+              </div>
+              
+              {selectedRequest.completed_date && (
+                <div className="grid grid-cols-3 gap-4 py-1 border-b">
+                  <div className="text-sm font-medium">Completed On:</div>
+                  <div className="text-sm col-span-2">{format(selectedRequest.completed_date, "MMM dd, yyyy")}</div>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-3 gap-4 py-1 border-b">
+                <div className="text-sm font-medium">Description:</div>
+                <div className="text-sm col-span-2">{selectedRequest.description}</div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4 py-1 border-b">
+                <div className="text-sm font-medium">Contact:</div>
+                <div className="text-sm col-span-2">{selectedRequest.contact_number}</div>
+              </div>
             </div>
             
-            <FormField
-              control={paymentForm.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cardholder Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John Doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {selectedRequest.status === "Completed" && (
+              <div className="border p-4 rounded-lg bg-green-50 text-center">
+                <CheckCircle2 className="h-6 w-6 text-green-600 mx-auto mb-2" />
+                <p className="text-sm font-medium text-green-800">Your request has been completed</p>
+                <p className="text-xs text-green-700 mt-1">You can collect any documents at the Divisional Secretariat office</p>
+              </div>
+            )}
             
             <div className="flex justify-end space-x-2 pt-2">
               <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setIsPayModalOpen(false);
-                  paymentForm.reset();
-                }}
+                onClick={() => setIsViewRequestModalOpen(false)}
+                className="bg-primary text-white"
               >
-                Cancel
-              </Button>
-              <Button type="submit" className="bg-primary text-white">
-                Pay Rs {pendingPayments.length > 0 ? pendingPayments[0].amount.toLocaleString() : "0"}
+                Close
               </Button>
             </div>
-          </form>
-        </Form>
+          </div>
+        )}
       </ModalForm>
     </div>
   );
 };
 
-// User profile component
-const ProfileComponent = () => {
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+// User Profile component
+const UserProfile = () => {
+  const { user } = useAuth();
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   
   // Profile form schema
-  const profileSchema = z.object({
-    full_name: z.string().min(2, "Full name must be at least 2 characters"),
+  const profileFormSchema = z.object({
+    full_name: z.string().min(3, "Full name must be at least 3 characters"),
     email: z.string().email("Invalid email address"),
     phone: z.string().min(10, "Phone number must be at least 10 digits"),
     address: z.string().min(5, "Address must be at least 5 characters"),
   });
   
-  // Profile form
-  const profileForm = useForm<z.infer<typeof profileSchema>>({
-    resolver: zodResolver(profileSchema),
+  // Form for editing profile
+  const profileForm = useForm<z.infer<typeof profileFormSchema>>({
+    resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      full_name: "Sarah Thompson",
-      email: "sarah.thompson@example.com",
-      phone: "+94 77 1234567",
-      address: "123 Main Street, Kalmunai",
+      full_name: "Ahmed Mohammed",
+      email: user?.email || "ahmed@example.com",
+      phone: "0776543210",
+      address: "15 Main Street, Kalmunai",
     },
   });
   
-  // Handle profile update submission
-  const onUpdateProfile = (data: z.infer<typeof profileSchema>) => {
-    console.log("Profile update:", data);
+  // Function to handle profile update
+  const onUpdateProfile = (data: z.infer<typeof profileFormSchema>) => {
+    console.log("Updating profile:", data);
     toast.success("Profile updated successfully");
-    setIsEditProfileOpen(false);
+    setIsEditProfileModalOpen(false);
   };
   
   return (
-    <Card className="glass-card">
-      <CardHeader>
-        <div className="flex justify-between">
-          <CardTitle>Personal Profile</CardTitle>
-          <Button variant="outline" onClick={() => setIsEditProfileOpen(true)}>
-            Edit Profile
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col md:flex-row gap-8">
-          <div className="md:w-1/4 flex justify-center">
-            <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="h-12 w-12 text-primary/50" />
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold">My Profile</h2>
+        <Button onClick={() => setIsEditProfileModalOpen(true)} className="bg-primary text-white">
+          <Settings className="h-4 w-4 mr-2" />
+          Edit Profile
+        </Button>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Profile Card */}
+        <Card className="glass-card md:col-span-1">
+          <CardContent className="p-6 flex flex-col items-center">
+            <div className="w-24 h-24 bg-secondary/20 rounded-full flex items-center justify-center mb-4">
+              <User className="h-12 w-12 text-secondary" />
             </div>
-          </div>
-          <div className="md:w-3/4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Full Name</label>
-                <div className="text-lg">Sarah Thompson</div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">ID Number</label>
-                <div className="text-lg">984567321V</div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Email</label>
-                <div className="text-lg">sarah.thompson@example.com</div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Phone</label>
-                <div className="text-lg">+94 77 1234567</div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Address</label>
-                <div className="text-lg">123 Main Street, Kalmunai</div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Date of Birth</label>
-                <div className="text-lg">15 March 1984</div>
+            
+            <h2 className="text-xl font-bold">Ahmed Mohammed</h2>
+            <p className="text-sm text-muted-foreground mb-4">{user?.email}</p>
+            
+            <div className="w-full mt-2">
+              <div className="text-center p-3 bg-accent/10 rounded-lg mb-4">
+                <QRCode value="PUX123456" size={120} className="mx-auto mb-2" />
+                <p className="text-xs font-medium">PUX123456</p>
+                <p className="text-xs text-muted-foreground">Your Public ID</p>
               </div>
             </div>
-          </div>
-        </div>
-      </CardContent>
+          </CardContent>
+        </Card>
+        
+        {/* Profile Info */}
+        <Card className="glass-card md:col-span-2">
+          <CardHeader>
+            <CardTitle>Personal Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-3 gap-4 py-2 border-b">
+              <div className="font-medium">Full Name:</div>
+              <div className="col-span-2">Ahmed Mohammed</div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 py-2 border-b">
+              <div className="font-medium">Email:</div>
+              <div className="col-span-2">{user?.email || "ahmed@example.com"}</div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 py-2 border-b">
+              <div className="font-medium">Phone:</div>
+              <div className="col-span-2">0776543210</div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 py-2 border-b">
+              <div className="font-medium">Address:</div>
+              <div className="col-span-2">15 Main Street, Kalmunai</div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 py-2 border-b">
+              <div className="font-medium">Account Created:</div>
+              <div className="col-span-2">January 15, 2023</div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 py-2">
+              <div className="font-medium">Last Login:</div>
+              <div className="col-span-2">Today, 10:30 AM</div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Activity History */}
+        <Card className="glass-card md:col-span-3">
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <FileText className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Requested Birth Certificate</p>
+                  <p className="text-xs text-muted-foreground">September 5, 2023 - 2:34 PM</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <Download className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Downloaded Land Application Form</p>
+                  <p className="text-xs text-muted-foreground">August 20, 2023 - 11:15 AM</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <MessageCircle className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Received message from Land Department</p>
+                  <p className="text-xs text-muted-foreground">August 15, 2023 - 3:45 PM</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Land Title request completed</p>
+                  <p className="text-xs text-muted-foreground">July 28, 2023 - 9:20 AM</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
       
       {/* Edit Profile Modal */}
       <ModalForm
         title="Edit Profile"
         description="Update your personal information"
-        open={isEditProfileOpen}
-        onOpenChange={setIsEditProfileOpen}
+        open={isEditProfileModalOpen}
+        onOpenChange={setIsEditProfileModalOpen}
       >
         <Form {...profileForm}>
           <form onSubmit={profileForm.handleSubmit(onUpdateProfile)} className="space-y-4">
@@ -885,7 +640,7 @@ const ProfileComponent = () => {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone</FormLabel>
+                  <FormLabel>Phone Number</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -909,10 +664,10 @@ const ProfileComponent = () => {
             />
             
             <div className="flex justify-end space-x-2 pt-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setIsEditProfileOpen(false)}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditProfileModalOpen(false)}
               >
                 Cancel
               </Button>
@@ -923,7 +678,332 @@ const ProfileComponent = () => {
           </form>
         </Form>
       </ModalForm>
-    </Card>
+    </div>
+  );
+};
+
+// Forms component
+const FormsDownload = () => {
+  // Mock forms data
+  const forms = [
+    {
+      id: "form1",
+      name: "Birth Certificate Application",
+      department: "Civil Registry",
+      fileType: "PDF",
+      size: "250 KB",
+      lastUpdated: "2023-05-15",
+    },
+    {
+      id: "form2",
+      name: "Marriage Certificate Application",
+      department: "Civil Registry",
+      fileType: "PDF",
+      size: "320 KB",
+      lastUpdated: "2023-06-10",
+    },
+    {
+      id: "form3",
+      name: "Land Title Transfer Form",
+      department: "Land Administration",
+      fileType: "PDF",
+      size: "450 KB",
+      lastUpdated: "2023-07-22",
+    },
+    {
+      id: "form4",
+      name: "Financial Aid Application",
+      department: "Social Services",
+      fileType: "PDF",
+      size: "380 KB",
+      lastUpdated: "2023-08-05",
+    },
+    {
+      id: "form5",
+      name: "ID Card Renewal Form",
+      department: "Administration",
+      fileType: "PDF",
+      size: "290 KB",
+      lastUpdated: "2023-09-12",
+    },
+  ];
+  
+  // Function to handle form download
+  const handleDownload = (formId: string) => {
+    const form = forms.find(f => f.id === formId);
+    toast.success(`Downloading ${form?.name}`);
+    // In a real app, this would trigger an actual download
+  };
+  
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold">Forms</h2>
+        <div className="relative">
+          <Input placeholder="Search forms..." className="pr-8" />
+          <Button variant="ghost" size="sm" className="absolute right-0 top-0 h-full">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-search">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.3-4.3"></path>
+            </svg>
+          </Button>
+        </div>
+      </div>
+      
+      <div className="border rounded-lg overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-muted">
+              <th className="px-4 py-3 text-left font-medium">Form Name</th>
+              <th className="px-4 py-3 text-left font-medium">Department</th>
+              <th className="px-4 py-3 text-left font-medium">Type</th>
+              <th className="px-4 py-3 text-left font-medium">Size</th>
+              <th className="px-4 py-3 text-left font-medium">Last Updated</th>
+              <th className="px-4 py-3 text-left font-medium">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {forms.map((form) => (
+              <tr key={form.id} className="border-t">
+                <td className="px-4 py-3">{form.name}</td>
+                <td className="px-4 py-3">{form.department}</td>
+                <td className="px-4 py-3">{form.fileType}</td>
+                <td className="px-4 py-3">{form.size}</td>
+                <td className="px-4 py-3">{form.lastUpdated}</td>
+                <td className="px-4 py-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDownload(form.id)}
+                    className="bg-secondary text-secondary-foreground"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// Messages component
+const Messages = () => {
+  const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  
+  // Mock messages data
+  const messages = [
+    {
+      id: "msg1",
+      sender: "Land Department",
+      subject: "Land Title Processing Update",
+      content: "Dear Ahmed,\n\nWe are writing to inform you that your land title application has been processed and is now ready for collection. Please visit our office with your identification documents to collect your land title certificate.\n\nRegards,\nLand Department",
+      date: new Date(2023, 8, 15, 10, 30),
+      read: false,
+    },
+    {
+      id: "msg2",
+      sender: "Civil Registry",
+      subject: "Birth Certificate Request Completed",
+      content: "Dear Ahmed,\n\nThis is to inform you that your request for a birth certificate has been completed. You can collect the certificate from our office during working hours.\n\nThank you for using our services.\n\nBest regards,\nCivil Registry Team",
+      date: new Date(2023, 8, 10, 14, 45),
+      read: true,
+    },
+    {
+      id: "msg3",
+      sender: "Financial Services",
+      subject: "Application Status: Financial Aid",
+      content: "Dear Ahmed,\n\nWe have reviewed your application for financial aid. Additional documents are required to process your application further. Please submit the following:\n\n1. Proof of income\n2. Bank statements for the last 3 months\n3. Utility bills\n\nPlease submit these documents within 14 days.\n\nRegards,\nFinancial Services Department",
+      date: new Date(2023, 7, 25, 9, 15),
+      read: true,
+    },
+  ];
+  
+  // Set first message as selected by default
+  useState(() => {
+    if (messages.length > 0 && !selectedMessage) {
+      setSelectedMessage(messages[0]);
+    }
+  });
+  
+  // Function to view message
+  const handleSelectMessage = (message: any) => {
+    setSelectedMessage(message);
+    // In a real app, would mark as read here
+  };
+  
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold">Messages</h2>
+        <Button className="bg-primary text-white">
+          <MessageCircle className="h-4 w-4 mr-2" />
+          Compose Message
+        </Button>
+      </div>
+      
+      <div className="border rounded-lg overflow-hidden bg-background">
+        <div className="grid grid-cols-1 md:grid-cols-3 h-[500px]">
+          {/* Message List */}
+          <div className="border-r overflow-y-auto">
+            <div className="p-3 border-b bg-muted font-medium">Inbox (3)</div>
+            <div className="divide-y">
+              {messages.map((message) => (
+                <div 
+                  key={message.id}
+                  className={`p-3 cursor-pointer hover:bg-accent/10 ${
+                    selectedMessage?.id === message.id ? 'bg-accent/10 border-l-4 border-primary' : ''
+                  } ${!message.read ? 'font-medium' : ''}`}
+                  onClick={() => handleSelectMessage(message)}
+                >
+                  <div className="flex items-center justify-between">
+                    <p className={`${!message.read ? 'font-medium' : ''}`}>{message.sender}</p>
+                    <p className="text-xs text-muted-foreground">{format(message.date, "MMM d")}</p>
+                  </div>
+                  <p className="text-sm truncate">{message.subject}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Message Content */}
+          <div className="col-span-2 flex flex-col">
+            {selectedMessage ? (
+              <>
+                <div className="p-4 border-b">
+                  <h3 className="font-bold">{selectedMessage.subject}</h3>
+                  <div className="flex items-center text-sm text-muted-foreground mt-1">
+                    <span>From: {selectedMessage.sender}</span>
+                    <span className="mx-2">•</span>
+                    <span>{format(selectedMessage.date, "MMM d, yyyy h:mm a")}</span>
+                  </div>
+                </div>
+                <div className="p-4 flex-1 overflow-y-auto">
+                  <p className="whitespace-pre-line">{selectedMessage.content}</p>
+                </div>
+                <div className="p-4 border-t flex justify-end space-x-2">
+                  <Button variant="outline">Reply</Button>
+                  <Button variant="outline">Forward</Button>
+                  <Button variant="outline" className="text-destructive">Delete</Button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-muted-foreground">Select a message to view</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Payments component
+const Payments = () => {
+  // Mock payment history
+  const paymentHistory = [
+    {
+      id: "pay1",
+      service: "Birth Certificate",
+      amount: 250,
+      date: new Date(2023, 6, 15),
+      status: "Paid",
+    },
+    {
+      id: "pay2",
+      service: "Land Title Processing",
+      amount: 1500,
+      date: new Date(2023, 5, 10),
+      status: "Paid",
+    },
+    {
+      id: "pay3",
+      service: "Marriage Certificate",
+      amount: 350,
+      date: new Date(2023, 3, 22),
+      status: "Paid",
+    },
+  ];
+  
+  // Function to get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Paid":
+        return "bg-green-500 hover:bg-green-600";
+      case "Pending":
+        return "bg-yellow-500 hover:bg-yellow-600";
+      case "Failed":
+        return "bg-red-500 hover:bg-red-600";
+      default:
+        return "bg-gray-500 hover:bg-gray-600";
+    }
+  };
+  
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold">Payments</h2>
+        <Button className="bg-primary text-white">
+          <CreditCard className="h-4 w-4 mr-2" />
+          Make Payment
+        </Button>
+      </div>
+      
+      {/* No Pending Payments Card */}
+      <Card className="glass-card">
+        <CardContent className="p-8 flex flex-col items-center">
+          <div className="rounded-full bg-green-100 p-4 mb-4">
+            <CheckCircle2 className="h-8 w-8 text-green-600" />
+          </div>
+          <h3 className="text-xl font-medium mb-2">No Pending Payments</h3>
+          <p className="text-muted-foreground text-center max-w-md">
+            You don't have any pending payments at the moment. Your payment history is shown below.
+          </p>
+        </CardContent>
+      </Card>
+      
+      {/* Payment History */}
+      <div>
+        <h3 className="text-lg font-medium mb-4">Payment History</h3>
+        <div className="border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-muted">
+                <th className="px-4 py-3 text-left font-medium">Service</th>
+                <th className="px-4 py-3 text-left font-medium">Amount</th>
+                <th className="px-4 py-3 text-left font-medium">Date</th>
+                <th className="px-4 py-3 text-left font-medium">Status</th>
+                <th className="px-4 py-3 text-left font-medium">Receipt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paymentHistory.map((payment) => (
+                <tr key={payment.id} className="border-t">
+                  <td className="px-4 py-3">{payment.service}</td>
+                  <td className="px-4 py-3">₹{payment.amount.toFixed(2)}</td>
+                  <td className="px-4 py-3">{format(payment.date, "MMM dd, yyyy")}</td>
+                  <td className="px-4 py-3">
+                    <Badge className={getStatusColor(payment.status)}>
+                      {payment.status}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Button variant="outline" size="sm">
+                      <Download className="h-4 w-4 mr-2" />
+                      Receipt
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -933,98 +1013,128 @@ const PublicDashboard = () => {
   
   // Define the menu items
   const menuItems = [
-    { label: "Overview", icon: Building, value: "overview" },
-    { label: "Services", icon: FileText, value: "services" },
-    { label: "History", icon: History, value: "history" },
+    { label: "Overview", icon: BarChart3, value: "overview" },
+    { label: "Service Requests", icon: FileText, value: "services" },
+    { label: "My Profile", icon: User, value: "profile" },
     { label: "Forms", icon: Download, value: "forms" },
-    { label: "Messages", icon: MessageSquare, value: "messages" },
+    { label: "Messages", icon: MessageCircle, value: "messages" },
     { label: "Payments", icon: CreditCard, value: "payments" },
-    { label: "Profile", icon: User, value: "profile" },
-    { label: "Settings", icon: Settings, value: "settings" },
   ];
   
   return (
     <DashboardLayout 
-      title="Citizen Portal" 
-      subtitle={`Welcome, ${user?.username}. Access government services and track your applications.`}
+      title="Public Dashboard" 
+      subtitle={`Welcome, ${user?.username}. Access government services from here.`}
       menu={menuItems}
     >
       <TabsContent value="overview" className="space-y-6 mt-2">
         <StatsGrid />
-        <DepartmentServices />
-      </TabsContent>
-      
-      <TabsContent value="services" className="space-y-6 mt-2">
-        <DepartmentServices />
-      </TabsContent>
-      
-      <TabsContent value="history" className="space-y-6 mt-2">
-        <HistoryComponent />
-      </TabsContent>
-      
-      <TabsContent value="forms" className="space-y-6 mt-2">
-        <FormsComponent />
-      </TabsContent>
-      
-      <TabsContent value="messages" className="space-y-6 mt-2">
-        <MessagesComponent />
-      </TabsContent>
-      
-      <TabsContent value="payments" className="space-y-6 mt-2">
-        <PaymentsComponent />
-      </TabsContent>
-      
-      <TabsContent value="profile" className="space-y-6 mt-2">
-        <ProfileComponent />
-      </TabsContent>
-      
-      <TabsContent value="settings" className="space-y-6 mt-2">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle>Recent Service Requests</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between border-b pb-2">
+                <div>
+                  <p className="font-medium">Marriage Certificate</p>
+                  <p className="text-xs text-muted-foreground">Sept 5, 2023</p>
+                </div>
+                <Badge className="bg-yellow-500 hover:bg-yellow-600">Pending</Badge>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <div>
+                  <p className="font-medium">Land Title</p>
+                  <p className="text-xs text-muted-foreground">Aug 10, 2023</p>
+                </div>
+                <Badge className="bg-blue-500 hover:bg-blue-600">Processing</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Birth Certificate</p>
+                  <p className="text-xs text-muted-foreground">June 15, 2023</p>
+                </div>
+                <Badge className="bg-green-500 hover:bg-green-600">Completed</Badge>
+              </div>
+              <Button variant="outline" className="w-full mt-2">View All Requests</Button>
+            </CardContent>
+          </Card>
+          
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle>Recent Messages</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between border-b pb-2">
+                <div>
+                  <p className="font-medium">Land Title Processing Update</p>
+                  <p className="text-xs text-muted-foreground">Land Department - Sept 15, 2023</p>
+                </div>
+                <Badge variant="outline">New</Badge>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <div>
+                  <p className="font-medium">Birth Certificate Request Completed</p>
+                  <p className="text-xs text-muted-foreground">Civil Registry - Sept 10, 2023</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Application Status: Financial Aid</p>
+                  <p className="text-xs text-muted-foreground">Financial Services - Aug 25, 2023</p>
+                </div>
+              </div>
+              <Button variant="outline" className="w-full mt-2">View All Messages</Button>
+            </CardContent>
+          </Card>
+        </div>
+        
         <Card className="glass-card">
           <CardHeader>
-            <CardTitle>Account Settings</CardTitle>
+            <CardTitle>Available Services</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">Password</h3>
-                  <p className="text-sm text-muted-foreground">Update your account password</p>
-                </div>
-                <Button variant="outline">Change</Button>
-              </div>
-              <div className="flex justify-between items-center p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">Email Notifications</h3>
-                  <p className="text-sm text-muted-foreground">Manage email notification preferences</p>
-                </div>
-                <Button variant="outline">Configure</Button>
-              </div>
-              <div className="flex justify-between items-center p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">SMS Alerts</h3>
-                  <p className="text-sm text-muted-foreground">Manage SMS notification preferences</p>
-                </div>
-                <Button variant="outline">Configure</Button>
-              </div>
-              <div className="flex justify-between items-center p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">Language</h3>
-                  <p className="text-sm text-muted-foreground">Set your preferred language</p>
-                </div>
-                <Select>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="English" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="ta">Tamil</SelectItem>
-                    <SelectItem value="si">Sinhala</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Button className="h-auto py-6 flex flex-col bg-primary text-white">
+                <FileText className="h-8 w-8 mb-2" />
+                <span>Request Services</span>
+              </Button>
+              <Button className="h-auto py-6 flex flex-col bg-secondary text-secondary-foreground">
+                <Download className="h-8 w-8 mb-2" />
+                <span>Download Forms</span>
+              </Button>
+              <Button className="h-auto py-6 flex flex-col bg-accent text-accent-foreground">
+                <User className="h-8 w-8 mb-2" />
+                <span>My Profile</span>
+              </Button>
+              <Button className="h-auto py-6 flex flex-col">
+                <MessageCircle className="h-8 w-8 mb-2" />
+                <span>Contact Us</span>
+              </Button>
             </div>
           </CardContent>
         </Card>
+      </TabsContent>
+      
+      <TabsContent value="services" className="space-y-6 mt-2">
+        <ServiceRequests />
+      </TabsContent>
+      
+      <TabsContent value="profile" className="space-y-6 mt-2">
+        <UserProfile />
+      </TabsContent>
+      
+      <TabsContent value="forms" className="space-y-6 mt-2">
+        <FormsDownload />
+      </TabsContent>
+      
+      <TabsContent value="messages" className="space-y-6 mt-2">
+        <Messages />
+      </TabsContent>
+      
+      <TabsContent value="payments" className="space-y-6 mt-2">
+        <Payments />
       </TabsContent>
     </DashboardLayout>
   );

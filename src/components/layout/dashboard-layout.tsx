@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/auth/auth-context";
 import { Card } from "@/components/ui/card";
 import { LogOut } from "lucide-react";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -66,7 +67,7 @@ export const DashboardLayout = ({
                 variant={activeTab === item.value ? "secondary" : "ghost"}
                 className={`w-full justify-start text-left ${
                   activeTab === item.value
-                    ? "bg-white/20 text-white"
+                    ? "bg-secondary text-secondary-foreground"
                     : "text-white/80 hover:text-white hover:bg-white/10"
                 }`}
                 onClick={() => setActiveTab(item.value)}
@@ -112,7 +113,7 @@ export const DashboardLayout = ({
                   key={item.value}
                   variant={activeTab === item.value ? "secondary" : "outline"}
                   size="sm"
-                  className={activeTab === item.value ? "bg-primary text-white" : ""}
+                  className={activeTab === item.value ? "bg-secondary text-secondary-foreground" : ""}
                   onClick={() => setActiveTab(item.value)}
                 >
                   <item.icon className="mr-2 h-4 w-4" />
@@ -133,7 +134,9 @@ export const DashboardLayout = ({
           {/* Content */}
           <div className="flex-1 p-6">
             <Card className="bg-white/90 backdrop-blur-sm border shadow-md p-6">
-              {filterChildrenByTab(children)}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                {children}
+              </Tabs>
             </Card>
           </div>
         </div>

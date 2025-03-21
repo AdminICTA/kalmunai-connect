@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useAuth } from "@/auth/auth-context";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/ui/modal-form";
@@ -17,7 +18,6 @@ import {
   Layers,
   FileText
 } from "lucide-react";
-import { TabsContent } from "@/components/ui/tabs";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -920,6 +920,43 @@ const ServiceManagement = () => {
   );
 };
 
+// Settings component
+const SystemSettings = () => {
+  return (
+    <Card className="glass-card">
+      <CardHeader>
+        <CardTitle>System Settings</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-muted-foreground mb-4">Configure system-wide settings and preferences.</p>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center p-4 border rounded-lg">
+            <div>
+              <h3 className="font-medium">Email Notifications</h3>
+              <p className="text-sm text-muted-foreground">Enable or disable system email notifications</p>
+            </div>
+            <Button variant="outline">Configure</Button>
+          </div>
+          <div className="flex justify-between items-center p-4 border rounded-lg">
+            <div>
+              <h3 className="font-medium">Security Settings</h3>
+              <p className="text-sm text-muted-foreground">Configure password policies and account security</p>
+            </div>
+            <Button variant="outline">Configure</Button>
+          </div>
+          <div className="flex justify-between items-center p-4 border rounded-lg">
+            <div>
+              <h3 className="font-medium">System Backup</h3>
+              <p className="text-sm text-muted-foreground">Configure automatic backup settings</p>
+            </div>
+            <Button variant="outline">Configure</Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 // Main admin dashboard component
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -961,37 +998,7 @@ const AdminDashboard = () => {
       </TabsContent>
       
       <TabsContent value="settings" className="space-y-6 mt-2">
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle>System Settings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">Configure system-wide settings and preferences.</p>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">Email Notifications</h3>
-                  <p className="text-sm text-muted-foreground">Enable or disable system email notifications</p>
-                </div>
-                <Button variant="outline">Configure</Button>
-              </div>
-              <div className="flex justify-between items-center p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">Security Settings</h3>
-                  <p className="text-sm text-muted-foreground">Configure password policies and account security</p>
-                </div>
-                <Button variant="outline">Configure</Button>
-              </div>
-              <div className="flex justify-between items-center p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">System Backup</h3>
-                  <p className="text-sm text-muted-foreground">Configure automatic backup settings</p>
-                </div>
-                <Button variant="outline">Configure</Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <SystemSettings />
       </TabsContent>
     </DashboardLayout>
   );
