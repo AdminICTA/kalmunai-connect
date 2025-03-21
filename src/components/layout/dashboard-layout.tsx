@@ -40,6 +40,7 @@ export const DashboardLayout = ({
       const activeChild = children.find(
         (child) => 
           React.isValidElement(child) && 
+          'value' in child.props && 
           child.props.value === activeTab
       );
       return activeChild || children[0];
