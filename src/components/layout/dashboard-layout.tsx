@@ -7,7 +7,7 @@ import { useAuth } from "@/auth/auth-context";
 import { Card } from "@/components/ui/card";
 import { LogOut, Menu, X } from "lucide-react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface DashboardLayoutProps {
@@ -31,7 +31,7 @@ export const DashboardLayout = ({
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>(menu[0]?.value || "");
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Set initial active tab based on URL hash if present
