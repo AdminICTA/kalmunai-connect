@@ -29,6 +29,11 @@ class AuthService {
    * Log in a user with email/username and password
    */
   async login(usernameOrEmail: string, password: string): Promise<LoginResponse> {
+    // Use mock login for development mode unless explicitly configured to use real API
+    if (process.env.NODE_ENV === 'development' && !import.meta.env.VITE_USE_REAL_API) {
+      return this.mockLogin(usernameOrEmail, password);
+    }
+
     try {
       const response = await apiService.post<LoginResponse>(ENDPOINTS.AUTH.LOGIN, {
         username_or_email: usernameOrEmail,
@@ -46,9 +51,76 @@ class AuthService {
       return response;
     } catch (error) {
       console.error('Login error:', error);
+      
+      // If API call fails in development, fall back to mock login
+      if (process.env.NODE_ENV === 'development') {
+        console.log('API login failed, falling back to mock login');
+        return this.mockLogin(usernameOrEmail, password);
+      }
+      
       toast.error('Login failed. Please try again.');
       throw error;
     }
+  }
+
+  /**
+   * Mock login for development purposes
+   */
+  private async mockLogin(usernameOrEmail: string, password: string): Promise<LoginResponse> {
+    console.log('Using mock login with:', usernameOrEmail);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    let mockUser;
+    
+    if (usernameOrEmail.includes("icta") || usernameOrEmail === "ICTA") {
+      mockUser = { 
+        id: "u1", 
+        username: "ICTA", 
+        email: "icta@dskalmunai.com", 
+        role_id: "Admin",
+        department_id: "ADM1"
+      };
+    } else if (usernameOrEmail.includes("farhana") || usernameOrEmail === "Farhana") {
+      mockUser = { 
+        id: "u2", 
+        username: "Farhana", 
+        email: "farhana@dskalmunai.com", 
+        role_id: "Admin",
+        department_id: "ADR1"
+      };
+    } else if (usernameOrEmail.includes("marliya") || usernameOrEmail === "Marliya") {
+      mockUser = { 
+        id: "u3", 
+        username: "Marliya", 
+        email: "marliya@dskalmunai.com", 
+        role_id: "User",
+        department_id: "ACC1"
+      };
+    } else {
+      mockUser = { 
+        id: "u4", 
+        username: "Maya", 
+        email: "maya@dskalmunai.com", 
+        role_id: "User",
+        department_id: "NIC1"
+      };
+    }
+    
+    // Store auth data in localStorage
+    const mockToken = "mock-token-" + Date.now();
+    localStorage.setItem("auth_token", mockToken);
+    localStorage.setItem("user", JSON.stringify(mockUser));
+    
+    toast.success('Login successful!');
+    
+    return {
+      success: true,
+      token: mockToken,
+      user: mockUser,
+      message: "Mock login successful"
+    };
   }
 
   /**
@@ -73,6 +145,13 @@ class AuthService {
       return response;
     } catch (error) {
       console.error('Registration error:', error);
+      
+      if (process.env.NODE_ENV === 'development') {
+        // Mock successful registration in development
+        toast.success('Mock registration successful!');
+        return { success: true, message: 'Mock registration successful' };
+      }
+      
       toast.error('Registration failed. Please try again.');
       throw error;
     }
@@ -83,8 +162,10 @@ class AuthService {
    */
   async logout(): Promise<void> {
     try {
-      // Call the logout endpoint (optional, depends on your backend implementation)
-      await apiService.post(ENDPOINTS.AUTH.LOGOUT, {});
+      // In production, call the logout endpoint
+      if (process.env.NODE_ENV !== 'development') {
+        await apiService.post(ENDPOINTS.AUTH.LOGOUT, {});
+      }
     } catch (error) {
       console.error('Logout API error:', error);
       // Continue with logout even if API call fails

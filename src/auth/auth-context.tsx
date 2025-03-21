@@ -56,61 +56,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (usernameOrEmail: string, password: string) => {
     setIsLoading(true);
     try {
-      // In development mode, still use the mock login for testing if not using real API
-      if (process.env.NODE_ENV === 'development' && !import.meta.env.VITE_USE_REAL_API) {
-        // Mock login for development using the actual database structure
-        let mockUser: User;
-        
-        if (usernameOrEmail.includes("icta") || usernameOrEmail === "ICTA") {
-          mockUser = { 
-            id: "u1", 
-            username: "ICTA", 
-            email: "icta@dskalmunai.com", 
-            role_id: "Admin",
-            department_id: "ADM1"
-          };
-        } else if (usernameOrEmail.includes("farhana") || usernameOrEmail === "Farhana") {
-          mockUser = { 
-            id: "u2", 
-            username: "Farhana", 
-            email: "farhana@dskalmunai.com", 
-            role_id: "Admin",
-            department_id: "ADR1"
-          };
-        } else if (usernameOrEmail.includes("marliya") || usernameOrEmail === "Marliya") {
-          mockUser = { 
-            id: "u3", 
-            username: "Marliya", 
-            email: "marliya@dskalmunai.com", 
-            role_id: "User",
-            department_id: "ACC1"
-          };
-        } else {
-          mockUser = { 
-            id: "u4", 
-            username: "Maya", 
-            email: "maya@dskalmunai.com", 
-            role_id: "User",
-            department_id: "NIC1"
-          };
-        }
-        
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        localStorage.setItem("user", JSON.stringify(mockUser));
-        localStorage.setItem("auth_token", "mock-token-" + Date.now());
-        setUser(mockUser);
-        console.log("Mock login successful:", mockUser);
+      // Use the auth service for all login attempts
+      const response = await authService.login(usernameOrEmail, password);
+      if (response.success && response.user) {
+        setUser(response.user as User);
+        console.log("Login successful:", response.user);
       } else {
-        // Use the real authentication service for production
-        const response = await authService.login(usernameOrEmail, password);
-        if (response.success && response.user) {
-          setUser(response.user as User);
-          console.log("Login successful:", response.user);
-        } else {
-          throw new Error(response.message || "Login failed");
-        }
+        throw new Error(response.message || "Login failed");
       }
     } catch (error) {
       console.error("Login error:", error);
