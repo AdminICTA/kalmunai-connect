@@ -70,6 +70,14 @@ export default {
           sand: '#E8C69B',      // Sand/beige
           copper: '#D69369',    // Copper/light orange
           orange: '#CB6330'     // Orange
+        },
+        flower: {
+          darkBlue: '#1A2640',   // Dark blue (from the login bg)
+          mediumBlue: '#2F4D66', // Medium blue (from the login bg)
+          teal: '#357D88',       // Teal (from the color palette)
+          lightTeal: '#399AA5',  // Light teal (from the color palette)
+          pastelTeal: '#5CA9AF', // Pastel teal (from the color palette)
+          red: '#DA4E5A',        // Red (from the color palette)
         }
       },
       borderRadius: {
@@ -134,7 +142,9 @@ export default {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-subtle': 'linear-gradient(to right bottom, rgb(249, 250, 251), rgb(243, 244, 246))',
         'gradient-kalmunai': 'linear-gradient(to right, #13272E, #487674)',
-        'gradient-accent': 'linear-gradient(to right, #E8C69B, #CB6330)'
+        'gradient-accent': 'linear-gradient(to right, #E8C69B, #CB6330)',
+        'gradient-flower': 'linear-gradient(to right, #1A2640, #5CA9AF)',
+        'gradient-flower-accent': 'linear-gradient(to right, #5CA9AF, #DA4E5A)'
       }
     }
   },

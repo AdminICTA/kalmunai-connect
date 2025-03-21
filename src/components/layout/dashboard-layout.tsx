@@ -38,10 +38,12 @@ export const DashboardLayout = ({
     // If children is an array, find the child with the matching tab value
     if (Array.isArray(children)) {
       const activeChild = children.find(
-        (child) => 
-          React.isValidElement(child) && 
-          'value' in child.props && 
-          child.props.value === activeTab
+        (child) => {
+          if (typeof child === 'object' && child !== null && 'props' in child) {
+            return 'value' in child.props && child.props.value === activeTab;
+          }
+          return false;
+        }
       );
       return activeChild || children[0];
     }

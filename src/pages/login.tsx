@@ -1,19 +1,18 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MainLayout } from "@/components/layout/main-layout";
-import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/auth/auth-context";
-import { LockKeyhole, AtSign, ArrowRight } from "lucide-react";
+import { AtSign, Lock } from "lucide-react";
 
 const Login = () => {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -53,140 +52,120 @@ const Login = () => {
   };
 
   return (
-    <MainLayout>
-      <div className="container min-h-[calc(100vh-16rem)] py-12">
-        <div className="grid w-full grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto overflow-hidden rounded-2xl shadow-xl">
-          {/* Left column - Image and Text */}
-          <div 
-            className="flex flex-col justify-center p-8 text-white relative overflow-hidden"
-            style={{ 
-              background: "linear-gradient(135deg, #13272E 0%, #487674 100%)"
-            }}
-          >
-            <div className="absolute inset-0 opacity-20 bg-pattern"></div>
-            <div className="relative z-10 space-y-6">
-              <Logo size="lg" />
-              
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight">Welcome to Kalmunai DS</h1>
-                <p className="text-teal-100">
-                  Sign in to access government services
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-3 mt-8">
-                <div style={{ background: "#13272E" }} className="h-10 rounded flex items-center justify-center text-xs">
-                  #13272E
-                </div>
-                <div style={{ background: "#487674" }} className="h-10 rounded flex items-center justify-center text-xs">
-                  #487674
-                </div>
-                <div style={{ background: "#83B4AE" }} className="h-10 rounded flex items-center justify-center text-xs">
-                  #83B4AE
-                </div>
-                <div style={{ background: "#E8C69B" }} className="h-10 rounded flex items-center justify-center text-xs">
-                  #E8C69B
-                </div>
-                <div style={{ background: "#D69369" }} className="h-10 rounded flex items-center justify-center text-xs">
-                  #D69369
-                </div>
-                <div style={{ background: "#CB6330" }} className="h-10 rounded flex items-center justify-center text-xs">
-                  #CB6330
-                </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#2F4D66] to-[#5CA9AF] p-4">
+      <div className="w-full max-w-5xl bg-[#1A2640] rounded-2xl shadow-2xl overflow-hidden flex">
+        {/* Left Side - Login Form */}
+        <div className="w-full md:w-2/5 p-8 flex flex-col justify-center">
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-24 h-24 bg-transparent border-2 border-[#5CA9AF] rounded-full flex items-center justify-center mb-6">
+              <div className="text-[#5CA9AF]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
               </div>
             </div>
           </div>
           
-          {/* Right column - Login Form */}
-          <div className="flex flex-col justify-center p-8 bg-white">
-            <div className="mx-auto w-full max-w-sm space-y-6">
-              <div className="space-y-2 text-center">
-                <h2 className="text-2xl font-semibold tracking-tight">Sign in</h2>
-                <p className="text-sm text-muted-foreground">
-                  Enter your credentials below to access your account
-                </p>
-              </div>
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="usernameOrEmail">Username or Email</Label>
-                    <div className="relative">
-                      <AtSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="usernameOrEmail"
-                        placeholder="icta@dskalmunai.com"
-                        type="text"
-                        className="pl-10"
-                        value={usernameOrEmail}
-                        onChange={(e) => setUsernameOrEmail(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label htmlFor="password">Password</Label>
-                      <a 
-                        href="#" 
-                        className="text-xs text-teal-600 hover:text-teal-700"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          toast({
-                            title: "Password Reset",
-                            description: "Please contact your administrator to reset your password",
-                          });
-                        }}
-                      >
-                        Forgot password?
-                      </a>
-                    </div>
-                    <div className="relative">
-                      <LockKeyhole className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="password"
-                        type="password"
-                        className="pl-10"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                      />
-                    </div>
-                  </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#5CA9AF]">
+                  <AtSign size={18} />
                 </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full gap-2 bg-gradient-to-r from-[#13272E] to-[#487674] hover:from-[#13272E] hover:to-[#487674] hover:opacity-90" 
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Signing in..." : "Sign in"}
-                  {!isLoading && <ArrowRight className="h-4 w-4" />}
-                </Button>
-              </form>
-              
-              <div className="text-center text-sm">
-                <p className="text-muted-foreground">
-                  Don't have an account?{" "}
-                  <Button variant="link" className="p-0 h-auto text-[#CB6330]" onClick={() => navigate("/")}>
-                    Contact administrator
-                  </Button>
-                </p>
+                <Input
+                  type="text"
+                  placeholder="Username"
+                  className="pl-10 bg-transparent border-[#5CA9AF]/30 text-white focus:border-[#DA4E5A] focus:ring-[#DA4E5A]"
+                  value={usernameOrEmail}
+                  onChange={(e) => setUsernameOrEmail(e.target.value)}
+                />
               </div>
-              
-              {/* Login Hints */}
-              <div className="rounded-lg bg-slate-50 p-4 text-sm">
-                <p className="font-medium mb-2 text-slate-700">Available test accounts:</p>
-                <ul className="space-y-1 text-slate-500 text-xs">
-                  <li><strong>Admin:</strong> icta@dskalmunai.com / 1993</li>
-                  <li><strong>Admin:</strong> farhana@dskalmunai.com / 0726</li>
-                  <li><strong>User:</strong> marliya@dskalmunai.com / 1966</li>
-                  <li><strong>User:</strong> maya@dskalmunai.com / 1991</li>
-                </ul>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#5CA9AF]">
+                  <Lock size={18} />
+                </div>
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  className="pl-10 bg-transparent border-[#5CA9AF]/30 text-white focus:border-[#DA4E5A] focus:ring-[#DA4E5A]"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
               </div>
+            </div>
+            
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={() => setRememberMe(!rememberMe)}
+                  className="mr-2 h-4 w-4 accent-[#DA4E5A]"
+                />
+                <label htmlFor="rememberMe" className="text-[#5CA9AF]">Remember me</label>
+              </div>
+              <a href="#" className="text-[#5CA9AF] hover:text-[#DA4E5A]" onClick={(e) => {
+                e.preventDefault();
+                toast({
+                  title: "Password Reset",
+                  description: "Please contact your administrator to reset your password",
+                });
+              }}>
+                Forgot password?
+              </a>
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full bg-[#DA4E5A] hover:bg-[#DA4E5A]/90 text-white py-2 rounded-md"
+              disabled={isLoading}
+            >
+              {isLoading ? "Signing in..." : "LOGIN"}
+            </Button>
+          </form>
+          
+          <div className="mt-8 hidden">
+            <p className="text-xs text-white/60">Available test accounts:</p>
+            <ul className="text-xs text-white/60 mt-1">
+              <li>icta@dskalmunai.com / 1993</li>
+              <li>farhana@dskalmunai.com / 0726</li>
+              <li>marliya@dskalmunai.com / 1966</li>
+              <li>maya@dskalmunai.com / 1991</li>
+            </ul>
+          </div>
+        </div>
+        
+        {/* Right Side - Welcome Content */}
+        <div className="hidden md:flex md:w-3/5 bg-gradient-to-br from-[#1A2640] to-[#2F4D66] p-12 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full opacity-20">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#5CA9AF]/30 to-[#DA4E5A]/30"></div>
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="absolute w-[150%] h-[150%] -top-1/4 -left-1/4">
+              <path fill="#5CA9AF" d="M47.7,-57.5C59.5,-47.5,65.9,-30.3,67.2,-13.5C68.5,3.3,64.6,19.7,55.8,32C46.9,44.3,33,52.6,17.7,57.5C2.3,62.4,-14.4,64,-31.9,59.1C-49.3,54.2,-67.4,42.9,-74.9,26.3C-82.3,9.7,-79,-12.2,-69.3,-28.8C-59.6,-45.4,-43.6,-56.8,-27.6,-64.6C-11.6,-72.3,4.3,-76.5,21.1,-73C37.8,-69.5,55.5,-58.3,47.7,-57.5Z" transform="translate(100 100)" />
+            </svg>
+          </div>
+          
+          <div className="z-10 flex flex-col items-start justify-center text-white">
+            <h1 className="text-5xl font-bold mb-6">Welcome.</h1>
+            <p className="text-lg mb-8 max-w-md opacity-80">
+              Sign in to access the Divisional Secretariat - Kalmunai services portal. Manage your account and access government services efficiently.
+            </p>
+            
+            <div className="flex items-center space-x-2 text-sm opacity-80">
+              <span>Not a member?</span>
+              <a className="text-[#DA4E5A] underline" href="#" onClick={(e) => {
+                e.preventDefault();
+                toast({
+                  title: "Registration",
+                  description: "Please contact your administrator to create an account",
+                });
+              }}>Sign up now</a>
             </div>
           </div>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 };
 
