@@ -90,9 +90,17 @@ class AuthService {
         role_id: "Admin",
         department_id: "ADR1"
       };
-    } else if (usernameOrEmail.includes("marliya") || usernameOrEmail === "Marliya") {
+    } else if (usernameOrEmail.includes("staff") || usernameOrEmail === "Staff") {
       mockUser = { 
         id: "u3", 
+        username: "Staff", 
+        email: "staff@dskalmunai.com", 
+        role_id: "Staff",
+        department_id: "LND1"
+      };
+    } else if (usernameOrEmail.includes("marliya") || usernameOrEmail === "Marliya") {
+      mockUser = { 
+        id: "u4", 
         username: "Marliya", 
         email: "marliya@dskalmunai.com", 
         role_id: "User",
@@ -100,7 +108,7 @@ class AuthService {
       };
     } else {
       mockUser = { 
-        id: "u4", 
+        id: "u5", 
         username: "Maya", 
         email: "maya@dskalmunai.com", 
         role_id: "User",

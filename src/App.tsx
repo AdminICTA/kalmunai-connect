@@ -47,8 +47,23 @@ const ProtectedRoute = ({ children, requiredRole }: { children: React.ReactNode,
   return <>{children}</>;
 };
 
+// Provide some user feedback when loading auth state
+const LoadingScreen = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="text-center">
+      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+      <p className="text-muted-foreground">Loading...</p>
+    </div>
+  </div>
+);
+
 const AppRoutes = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  
+  // Show loading screen while auth state is being determined
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
   
   return (
     <Routes>
@@ -85,19 +100,19 @@ const AppRoutes = () => {
       />
       
       <Route 
-        path="/dashboard/employee" 
+        path="/dashboard/user" 
         element={
-          <ProtectedRoute requiredRole={["Admin", "Staff", "User"]}>
-            <EmployeeDashboard />
+          <ProtectedRoute requiredRole="User">
+            <PublicDashboard />
           </ProtectedRoute>
         } 
       />
       
       <Route 
-        path="/dashboard/user" 
+        path="/dashboard/employee" 
         element={
-          <ProtectedRoute requiredRole="User">
-            <PublicDashboard />
+          <ProtectedRoute requiredRole={["Admin", "Staff", "User"]}>
+            <EmployeeDashboard />
           </ProtectedRoute>
         } 
       />
