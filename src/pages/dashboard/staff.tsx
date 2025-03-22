@@ -1,39 +1,37 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+
+import { useState } from "react";
 import { useAuth } from "@/auth/auth-context";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/ui/modal-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Users, 
-  Building2, 
-  Settings, 
-  BarChart3, 
-  UserPlus,
-  QrCode,
-  Scan,
-  IdCard,
-  Briefcase
-} from "lucide-react";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import QRCode from "qrcode.react";
+import { 
+  Users, 
+  ClipboardList, 
+  QrCode, 
+  BarChart3, 
+  UserPlus,
+  UserSearch,
+  Printer,
+  Building,
+  Download,
+  Scan,
+  FileText,
+  Search,
+  Eye
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { QRCodeSVG } from "qrcode.react";
 
-interface PublicUser {
-  public_user_id: string;
-  qr_code: string;
-  full_name: string;
-  email: string;
-  phone: string;
-}
-
+// Placeholder stats component
 const StatsGrid = () => {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -43,45 +41,45 @@ const StatsGrid = () => {
           <Users className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">342</div>
+          <div className="text-2xl font-bold">384</div>
           <p className="text-xs text-muted-foreground">
-            +24 from last month
+            +42 from last month
           </p>
         </CardContent>
       </Card>
       <Card className="glass-card animate-fade-up" style={{ animationDelay: "0.1s" }}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
-          <UserPlus className="h-4 w-4 text-primary" />
+          <CardTitle className="text-sm font-medium">ID Cards Generated</CardTitle>
+          <QrCode className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">18</div>
+          <div className="text-2xl font-bold">298</div>
           <p className="text-xs text-muted-foreground">
-            -3 from last week
+            +36 this month
           </p>
         </CardContent>
       </Card>
       <Card className="glass-card animate-fade-up" style={{ animationDelay: "0.2s" }}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">ID Cards Generated</CardTitle>
-          <IdCard className="h-4 w-4 text-primary" />
+          <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
+          <ClipboardList className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">289</div>
+          <div className="text-2xl font-bold">24</div>
           <p className="text-xs text-muted-foreground">
-            +15 from last month
+            -8 from last week
           </p>
         </CardContent>
       </Card>
       <Card className="glass-card animate-fade-up" style={{ animationDelay: "0.3s" }}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Services Provided</CardTitle>
-          <Building2 className="h-4 w-4 text-primary" />
+          <CardTitle className="text-sm font-medium">Forms Processed</CardTitle>
+          <FileText className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">128</div>
+          <div className="text-2xl font-bold">127</div>
           <p className="text-xs text-muted-foreground">
-            +32 from last month
+            +21 from last month
           </p>
         </CardContent>
       </Card>
@@ -89,152 +87,154 @@ const StatsGrid = () => {
   );
 };
 
+// Public user management component
 const PublicUserManagement = () => {
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
-  const [isViewUserModalOpen, setIsViewUserModalOpen] = useState(false);
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
-  const [isScanModalOpen, setIsScanModalOpen] = useState(false);
-  const [isIDCardModalOpen, setIsIDCardModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<PublicUser | null>(null);
+  const [isViewIdCardModalOpen, setIsViewIdCardModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
-  const [users, setUsers] = useState<PublicUser[]>([
-    { 
-      public_user_id: "pub_1", 
-      qr_code: "PUX123456", 
-      full_name: "Ahmed Mohammed", 
-      email: "ahmed@example.com", 
-      phone: "0776543210" 
-    },
-    { 
-      public_user_id: "pub_2", 
-      qr_code: "PUX234567", 
-      full_name: "Fatima Zahra", 
-      email: "fatima@example.com", 
-      phone: "0765432109" 
-    },
-    { 
-      public_user_id: "pub_3", 
-      qr_code: "PUX345678", 
-      full_name: "Mohammed Ali", 
-      email: "mali@example.com", 
-      phone: "0754321098" 
-    }
-  ]);
-
-  const userFormSchema = z.object({
+  // Public user form schema
+  const publicUserFormSchema = z.object({
     full_name: z.string().min(3, "Full name must be at least 3 characters"),
     email: z.string().email("Invalid email address"),
-    phone: z.string().min(10, "Phone number must be at least 10 digits"),
+    phone: z.string().min(8, "Phone number must be at least 8 characters"),
+    address: z.string().min(5, "Address must be at least 5 characters"),
+    nic: z.string().min(10, "NIC must be at least 10 characters"),
   });
 
-  const userForm = useForm<z.infer<typeof userFormSchema>>({
-    resolver: zodResolver(userFormSchema),
+  // Form for adding a new public user
+  const publicUserForm = useForm<z.infer<typeof publicUserFormSchema>>({
+    resolver: zodResolver(publicUserFormSchema),
     defaultValues: {
       full_name: "",
       email: "",
       phone: "",
+      address: "",
+      nic: "",
     },
   });
 
-  const editUserForm = useForm<z.infer<typeof userFormSchema>>({
-    resolver: zodResolver(userFormSchema),
+  // Edit user form
+  const editUserForm = useForm<z.infer<typeof publicUserFormSchema>>({
+    resolver: zodResolver(publicUserFormSchema),
     defaultValues: {
       full_name: "",
       email: "",
       phone: "",
+      address: "",
+      nic: "",
     },
   });
 
-  const generateQRCode = () => {
-    return "PU" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 7).toUpperCase();
-  };
-
-  const onAddUser = (data: z.infer<typeof userFormSchema>) => {
-    const qrCode = generateQRCode();
-    const newUser: PublicUser = {
-      public_user_id: "pub_" + Date.now().toString(),
-      qr_code: qrCode,
-      full_name: data.full_name,
-      email: data.email,
-      phone: data.phone
-    };
-    
-    console.log("Adding public user:", newUser);
-    setUsers([...users, newUser]);
-    
+  // Function to handle adding a new public user
+  const onAddPublicUser = (data: z.infer<typeof publicUserFormSchema>) => {
+    console.log("Adding public user:", data);
+    // Generate a unique QR code for the user
+    const qrCode = `DSPUB-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    // Here you would normally call an API to create the user
     toast.success("Public user created successfully");
     setIsAddUserModalOpen(false);
-    userForm.reset();
+    publicUserForm.reset();
   };
 
-  const onEditUser = (data: z.infer<typeof userFormSchema>) => {
-    if (!selectedUser) return;
-    
-    const updatedUser: PublicUser = {
-      ...selectedUser,
-      full_name: data.full_name,
-      email: data.email,
-      phone: data.phone
-    };
-    
-    console.log("Editing public user:", updatedUser);
-    setUsers(users.map(user => 
-      user.public_user_id === selectedUser.public_user_id ? updatedUser : user
-    ));
-    
+  // Function to handle editing a public user
+  const onEditPublicUser = (data: z.infer<typeof publicUserFormSchema>) => {
+    console.log("Editing public user:", data);
+    // Here you would normally call an API to update the user
     toast.success("Public user updated successfully");
     setIsEditUserModalOpen(false);
     editUserForm.reset();
   };
 
-  const handleViewUser = (user: PublicUser) => {
-    setSelectedUser(user);
-    setIsViewUserModalOpen(true);
-  };
-
-  const handleEditUser = (user: PublicUser) => {
+  // Function to open edit modal with user data
+  const handleEditUser = (user: any) => {
     setSelectedUser(user);
     editUserForm.reset({
       full_name: user.full_name,
       email: user.email,
       phone: user.phone,
+      address: user.address,
+      nic: user.nic,
     });
     setIsEditUserModalOpen(true);
   };
 
-  const handleGenerateIDCard = (user: PublicUser) => {
+  // Function to view the ID card
+  const handleViewIdCard = (user: any) => {
     setSelectedUser(user);
-    setIsIDCardModalOpen(true);
+    setIsViewIdCardModalOpen(true);
   };
 
-  const handleScan = () => {
-    setIsScanModalOpen(true);
+  // Function to handle scanning a QR code
+  const handleScanQrCode = () => {
+    // Here you would normally open a QR code scanner
+    toast.info("QR code scanner functionality would open here");
   };
 
-  const handleQRSearch = (qrCode: string) => {
-    const user = users.find(user => user.qr_code === qrCode);
-    if (user) {
-      setSelectedUser(user);
-      setIsViewUserModalOpen(true);
-      setIsScanModalOpen(false);
-    } else {
-      toast.error("User not found with this QR code");
-    }
+  // Function to navigate to employee dashboard
+  const handleOfficeButtonClick = () => {
+    navigate("/dashboard/employee");
   };
+
+  // Mock public users data for demonstration
+  const publicUsers = [
+    { id: "p1", qr_code: "DSPUB-12345", full_name: "Fathima Rizna", email: "fathima@example.com", phone: "0771234567", address: "123 Main St, Kalmunai", nic: "901234567V" },
+    { id: "p2", qr_code: "DSPUB-23456", full_name: "Mohamed Rifan", email: "mohamed@example.com", phone: "0772345678", address: "456 Oak St, Kalmunai", nic: "912345678V" },
+    { id: "p3", qr_code: "DSPUB-34567", full_name: "Suhail Ahmed", email: "suhail@example.com", phone: "0773456789", address: "789 Pine St, Kalmunai", nic: "923456789V" }
+  ];
+
+  // Filter users based on search term
+  const filteredUsers = publicUsers.filter(user => 
+    user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.qr_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.phone.includes(searchTerm)
+  );
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold">Public User Management</h2>
-        <div className="flex gap-2">
-          <Button onClick={handleScan} variant="outline" className="bg-secondary text-secondary-foreground">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button 
+            onClick={handleScanQrCode} 
+            variant="outline"
+            className="bg-secondary/10 border-secondary/30 text-secondary hover:bg-secondary/20"
+          >
             <Scan className="h-4 w-4 mr-2" />
             Scan QR
           </Button>
-          <Button onClick={() => setIsAddUserModalOpen(true)} className="bg-primary text-white">
+          <Button 
+            onClick={handleOfficeButtonClick} 
+            variant="outline"
+            className="bg-primary/10 border-primary/30 text-primary hover:bg-primary/20"
+          >
+            <Building className="h-4 w-4 mr-2" />
+            Office
+          </Button>
+          <Button 
+            onClick={() => setIsAddUserModalOpen(true)} 
+            className="bg-primary text-white"
+          >
             <UserPlus className="h-4 w-4 mr-2" />
             Add User
           </Button>
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-2 mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search by name, email, QR code or phone..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </div>
 
@@ -242,44 +242,46 @@ const PublicUserManagement = () => {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-muted">
+              <th className="px-4 py-3 text-left font-medium">QR Code</th>
               <th className="px-4 py-3 text-left font-medium">Full Name</th>
               <th className="px-4 py-3 text-left font-medium">Email</th>
               <th className="px-4 py-3 text-left font-medium">Phone</th>
-              <th className="px-4 py-3 text-left font-medium">QR Code</th>
               <th className="px-4 py-3 text-left font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
-              <tr key={user.public_user_id} className="border-t">
+            {filteredUsers.map((user) => (
+              <tr key={user.id} className="border-t">
+                <td className="px-4 py-3">{user.qr_code}</td>
                 <td className="px-4 py-3">{user.full_name}</td>
                 <td className="px-4 py-3">{user.email}</td>
                 <td className="px-4 py-3">{user.phone}</td>
-                <td className="px-4 py-3">{user.qr_code}</td>
                 <td className="px-4 py-3">
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="bg-secondary text-secondary-foreground"
-                      onClick={() => handleViewUser(user)}
-                    >
-                      View
-                    </Button>
+                  <div className="flex flex-wrap gap-2">
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleEditUser(user)}
+                      className="bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100"
                     >
                       Edit
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm"
-                      className="bg-accent text-accent-foreground"
-                      onClick={() => handleGenerateIDCard(user)}
+                      onClick={() => handleViewIdCard(user)}
+                      className="bg-green-50 border-green-200 text-green-600 hover:bg-green-100"
                     >
                       ID Card
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => navigate(`/public-details/${user.id}`)}
+                      className="bg-purple-50 border-purple-200 text-purple-600 hover:bg-purple-100"
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
                     </Button>
                   </div>
                 </td>
@@ -289,16 +291,17 @@ const PublicUserManagement = () => {
         </table>
       </div>
 
+      {/* Add Public User Modal */}
       <ModalForm
         title="Add New Public User"
         description="Create a new public user account"
         open={isAddUserModalOpen}
         onOpenChange={setIsAddUserModalOpen}
       >
-        <Form {...userForm}>
-          <form onSubmit={userForm.handleSubmit(onAddUser)} className="space-y-4">
+        <Form {...publicUserForm}>
+          <form onSubmit={publicUserForm.handleSubmit(onAddPublicUser)} className="space-y-4">
             <FormField
-              control={userForm.control}
+              control={publicUserForm.control}
               name="full_name"
               render={({ field }) => (
                 <FormItem>
@@ -312,7 +315,7 @@ const PublicUserManagement = () => {
             />
 
             <FormField
-              control={userForm.control}
+              control={publicUserForm.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
@@ -326,13 +329,41 @@ const PublicUserManagement = () => {
             />
 
             <FormField
-              control={userForm.control}
+              control={publicUserForm.control}
               name="phone"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter phone number" type="tel" {...field} />
+                    <Input placeholder="Enter phone number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={publicUserForm.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={publicUserForm.control}
+              name="nic"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>NIC Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter NIC number" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -345,7 +376,7 @@ const PublicUserManagement = () => {
                 variant="outline" 
                 onClick={() => {
                   setIsAddUserModalOpen(false);
-                  userForm.reset();
+                  publicUserForm.reset();
                 }}
               >
                 Cancel
@@ -358,67 +389,7 @@ const PublicUserManagement = () => {
         </Form>
       </ModalForm>
 
-      <ModalForm
-        title="User Details"
-        description="View public user information"
-        open={isViewUserModalOpen}
-        onOpenChange={setIsViewUserModalOpen}
-      >
-        {selectedUser && (
-          <div className="space-y-4">
-            <div className="flex justify-center mb-4">
-              <div className="bg-muted p-3 rounded-lg">
-                <QRCode value={selectedUser.qr_code} size={120} />
-              </div>
-            </div>
-            
-            <div className="text-center mb-2">
-              <div className="text-xs text-muted-foreground">QR Code</div>
-              <div className="font-bold">{selectedUser.qr_code}</div>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="grid grid-cols-3 gap-4 py-1 border-b">
-                <div className="text-sm font-medium">Full Name:</div>
-                <div className="text-sm col-span-2">{selectedUser.full_name}</div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4 py-1 border-b">
-                <div className="text-sm font-medium">Email:</div>
-                <div className="text-sm col-span-2">{selectedUser.email}</div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4 py-1 border-b">
-                <div className="text-sm font-medium">Phone:</div>
-                <div className="text-sm col-span-2">{selectedUser.phone}</div>
-              </div>
-            </div>
-            
-            <div className="flex justify-between pt-4">
-              <Button 
-                variant="outline" 
-                className="bg-secondary text-secondary-foreground"
-                onClick={() => {
-                  setIsViewUserModalOpen(false);
-                  handleGenerateIDCard(selectedUser);
-                }}
-              >
-                Generate ID Card
-              </Button>
-              
-              <Button 
-                onClick={() => {
-                  setIsViewUserModalOpen(false);
-                  handleEditUser(selectedUser);
-                }}
-              >
-                Edit Details
-              </Button>
-            </div>
-          </div>
-        )}
-      </ModalForm>
-
+      {/* Edit Public User Modal */}
       <ModalForm
         title="Edit Public User"
         description="Update public user information"
@@ -426,7 +397,7 @@ const PublicUserManagement = () => {
         onOpenChange={setIsEditUserModalOpen}
       >
         <Form {...editUserForm}>
-          <form onSubmit={editUserForm.handleSubmit(onEditUser)} className="space-y-4">
+          <form onSubmit={editUserForm.handleSubmit(onEditPublicUser)} className="space-y-4">
             <FormField
               control={editUserForm.control}
               name="full_name"
@@ -462,7 +433,35 @@ const PublicUserManagement = () => {
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter phone number" type="tel" {...field} />
+                    <Input placeholder="Enter phone number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={editUserForm.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={editUserForm.control}
+              name="nic"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>NIC Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter NIC number" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -488,93 +487,78 @@ const PublicUserManagement = () => {
         </Form>
       </ModalForm>
 
+      {/* View ID Card Modal */}
       <ModalForm
-        title="Scan QR Code"
-        description="Scan or enter QR code to find user"
-        open={isScanModalOpen}
-        onOpenChange={setIsScanModalOpen}
-      >
-        <div className="space-y-4">
-          <div className="border-2 border-dashed rounded-lg p-6 flex items-center justify-center bg-muted/20">
-            <div className="text-center">
-              <Scan className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Scan QR code or enter manually below</p>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="qr-code">QR Code</Label>
-            <div className="flex space-x-2">
-              <Input id="qr-code" placeholder="Enter QR code" />
-              <Button onClick={() => handleQRSearch("PUX123456")} className="bg-primary text-white">
-                Search
-              </Button>
-            </div>
-          </div>
-          
-          <div className="text-xs text-muted-foreground pt-2">
-            <p>For demo purposes, try entering: PUX123456, PUX234567, or PUX345678</p>
-          </div>
-        </div>
-      </ModalForm>
-
-      <ModalForm
-        title="ID Card Generator"
-        description="Generate and download ID card"
-        open={isIDCardModalOpen}
-        onOpenChange={setIsIDCardModalOpen}
+        title="ID Card Preview"
+        description="Print or download the ID card"
+        open={isViewIdCardModalOpen}
+        onOpenChange={setIsViewIdCardModalOpen}
       >
         {selectedUser && (
           <div className="space-y-4">
-            <div className="bg-white border rounded-lg overflow-hidden shadow-lg">
-              <div className="bg-primary text-white p-3 text-center">
-                <h3 className="font-bold">DIVISIONAL SECRETARIAT - KALMUNAI</h3>
-                <p className="text-xs">PUBLIC IDENTIFICATION CARD</p>
-              </div>
-              
-              <div className="p-4">
-                <div className="flex flex-col items-center mb-3">
-                  <div className="w-24 h-24 bg-gray-200 rounded-full mb-2 flex items-center justify-center">
-                    <UserPlus className="w-12 h-12 text-gray-400" />
-                  </div>
+            <div className="border rounded-lg p-4 bg-white">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="text-center">
+                  <h3 className="font-bold text-xl">Divisional Secretariat</h3>
+                  <h4 className="font-semibold text-lg">Kalmunai</h4>
+                  <p className="text-sm text-muted-foreground">Official Identification Card</p>
+                </div>
+                
+                <div className="w-24 h-24 rounded-full bg-gray-200 mb-2 flex items-center justify-center text-gray-500">
+                  <UserSearch className="h-12 w-12" />
+                </div>
+                
+                <div className="text-center">
                   <h3 className="font-bold">{selectedUser.full_name}</h3>
+                  <p className="text-sm text-muted-foreground">ID: {selectedUser.id}</p>
                 </div>
                 
-                <div className="space-y-2">
-                  <div className="grid grid-cols-3 gap-1 text-sm">
-                    <span className="font-medium">ID No:</span>
-                    <span className="col-span-2">{selectedUser.public_user_id}</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-1 text-sm">
-                    <span className="font-medium">Email:</span>
-                    <span className="col-span-2">{selectedUser.email}</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-1 text-sm">
-                    <span className="font-medium">Phone:</span>
-                    <span className="col-span-2">{selectedUser.phone}</span>
+                <div className="border-t pt-4 w-full">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <p className="font-semibold">NIC:</p>
+                    <p>{selectedUser.nic}</p>
+                    <p className="font-semibold">Phone:</p>
+                    <p>{selectedUser.phone}</p>
                   </div>
                 </div>
                 
-                <div className="flex justify-center mt-4">
-                  <QRCode value={selectedUser.qr_code} size={80} />
+                <div className="pt-2">
+                  <QRCodeSVG
+                    value={selectedUser.qr_code}
+                    size={120}
+                    level="H"
+                    includeMargin={true}
+                  />
+                  <p className="text-xs text-center mt-1">{selectedUser.qr_code}</p>
                 </div>
-                
-                <div className="text-center text-xs mt-2">
-                  <p>{selectedUser.qr_code}</p>
-                </div>
-              </div>
-              
-              <div className="bg-accent text-center p-2 text-xs">
-                <p>Issued by the Divisional Secretariat of Kalmunai</p>
-                <p>Valid until 31/12/2025</p>
               </div>
             </div>
             
             <div className="flex justify-end space-x-2 pt-2">
-              <Button variant="outline">Print ID Card</Button>
-              <Button className="bg-primary text-white">Download PDF</Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  // Handle print functionality
+                  window.print();
+                }}
+                className="bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100"
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Print
+              </Button>
+              <Button 
+                type="button" 
+                className="bg-primary text-white"
+                onClick={() => {
+                  // Handle download functionality
+                  toast.success("ID Card downloaded successfully");
+                  setIsViewIdCardModalOpen(false);
+                }}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
             </div>
           </div>
         )}
@@ -583,22 +567,43 @@ const PublicUserManagement = () => {
   );
 };
 
+// Scan QR Code component
+const ScanQrCode = () => {
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold">QR Code Scanner</h2>
+      
+      <Card className="overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50 border-blue-100">
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center justify-center space-y-6 py-10">
+            <div className="w-64 h-64 border-2 border-dashed border-primary/50 rounded-lg flex items-center justify-center bg-white/50">
+              <Scan className="h-16 w-16 text-primary/30" />
+            </div>
+            <p className="text-center text-muted-foreground">
+              Position the QR code within the scanner area.<br />
+              The public user details will appear automatically.
+            </p>
+            <Button className="bg-primary text-white">
+              <Scan className="h-4 w-4 mr-2" />
+              Start Scanning
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Main staff dashboard component
 const StaffDashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   
+  // Define the menu items
   const menuItems = [
     { label: "Overview", icon: BarChart3, value: "overview" },
-    { label: "Public Users", icon: Users, value: "public-users" },
-    { label: "Scan QR", icon: Scan, value: "scan-qr" },
-    { label: "ID Cards", icon: IdCard, value: "id-cards" },
-    { label: "Office", icon: Briefcase, value: "office" },
-    { label: "Settings", icon: Settings, value: "settings" },
+    { label: "Public Users", icon: Users, value: "users" },
+    { label: "Scan QR", icon: Scan, value: "scan" },
   ];
-  
-  const handleOfficeClick = () => {
-    navigate("/dashboard/employee");
-  };
   
   return (
     <DashboardLayout 
@@ -606,273 +611,17 @@ const StaffDashboard = () => {
       subtitle={`Welcome, ${user?.username}. Manage public users and services.`}
       menu={menuItems}
     >
-      <Tabs defaultValue="overview">
-        <TabsContent value="overview" className="space-y-6 mt-2">
-          <StatsGrid />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <Button onClick={() => navigate("#public-users")} className="bg-primary text-white h-auto py-4 flex flex-col">
-                    <UserPlus className="h-6 w-6 mb-2" />
-                    <span>Add Public User</span>
-                  </Button>
-                  <Button onClick={handleOfficeClick} className="bg-secondary text-secondary-foreground h-auto py-4 flex flex-col">
-                    <Briefcase className="h-6 w-6 mb-2" />
-                    <span>Go to Office</span>
-                  </Button>
-                  <Button variant="outline" className="h-auto py-4 flex flex-col">
-                    <Scan className="h-6 w-6 mb-2" />
-                    <span>Scan QR Code</span>
-                  </Button>
-                  <Button variant="outline" className="h-auto py-4 flex flex-col">
-                    <IdCard className="h-6 w-6 mb-2" />
-                    <span>Generate ID</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle>Recent Activities</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-3">
-                    <UserPlus className="h-5 w-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium">New user created</p>
-                      <p className="text-xs text-muted-foreground">Fatima Zahra - 2 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <IdCard className="h-5 w-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium">ID card generated</p>
-                      <p className="text-xs text-muted-foreground">Ahmed Mohammed - 3 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <Scan className="h-5 w-5 text-primary mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium">User verified via QR</p>
-                      <p className="text-xs text-muted-foreground">Mohammed Ali - 5 hours ago</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="public-users" className="space-y-6 mt-2">
-          <PublicUserManagement />
-        </TabsContent>
-        
-        <TabsContent value="scan-qr" className="space-y-6 mt-2">
-          <div className="grid place-items-center py-10">
-            <div className="text-center max-w-md">
-              <Scan className="h-16 w-16 mx-auto mb-6 text-primary" />
-              <h2 className="text-2xl font-bold mb-4">Scan QR Code</h2>
-              <p className="text-muted-foreground mb-8">Scan a public user's QR code to quickly access their profile and service history.</p>
-              
-              <div className="border-2 border-dashed rounded-lg p-10 flex items-center justify-center bg-muted/20 mb-6">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Point camera at QR code</p>
-                </div>
-              </div>
-              
-              <Button className="bg-primary text-white w-full py-2">
-                <Scan className="mr-2 h-4 w-4" />
-                Start Scanning
-              </Button>
-              
-              <div className="mt-4">
-                <p className="text-sm">Or enter QR code manually</p>
-                <div className="flex mt-2">
-                  <Input placeholder="Enter QR code" className="mr-2" />
-                  <Button className="bg-primary text-white">Search</Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="id-cards" className="space-y-6 mt-2">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold">ID Card Management</h2>
-            <Button className="bg-primary text-white">
-              <IdCard className="h-4 w-4 mr-2" />
-              Generate New ID Card
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="glass-card overflow-hidden">
-              <div className="bg-primary text-white p-2 text-center text-sm">
-                <h3>PUBLIC ID CARD</h3>
-              </div>
-              <CardContent className="p-4">
-                <div className="flex flex-col items-center mb-3">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full mb-2 flex items-center justify-center">
-                    <UserPlus className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="font-bold text-sm">Ahmed Mohammed</h3>
-                </div>
-                
-                <div className="flex justify-center mb-3">
-                  <QRCode value="PUX123456" size={80} />
-                </div>
-                
-                <div className="text-xs text-center">
-                  <p>PUX123456</p>
-                </div>
-                
-                <div className="flex justify-between mt-4">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs"
-                  >
-                    View
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    className="bg-primary text-white text-xs"
-                  >
-                    Print
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="glass-card overflow-hidden">
-              <div className="bg-primary text-white p-2 text-center text-sm">
-                <h3>PUBLIC ID CARD</h3>
-              </div>
-              <CardContent className="p-4">
-                <div className="flex flex-col items-center mb-3">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full mb-2 flex items-center justify-center">
-                    <UserPlus className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="font-bold text-sm">Fatima Zahra</h3>
-                </div>
-                
-                <div className="flex justify-center mb-3">
-                  <QRCode value="PUX234567" size={80} />
-                </div>
-                
-                <div className="text-xs text-center">
-                  <p>PUX234567</p>
-                </div>
-                
-                <div className="flex justify-between mt-4">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs"
-                  >
-                    View
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    className="bg-primary text-white text-xs"
-                  >
-                    Print
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="glass-card overflow-hidden">
-              <div className="bg-primary text-white p-2 text-center text-sm">
-                <h3>PUBLIC ID CARD</h3>
-              </div>
-              <CardContent className="p-4">
-                <div className="flex flex-col items-center mb-3">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full mb-2 flex items-center justify-center">
-                    <UserPlus className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="font-bold text-sm">Mohammed Ali</h3>
-                </div>
-                
-                <div className="flex justify-center mb-3">
-                  <QRCode value="PUX345678" size={80} />
-                </div>
-                
-                <div className="text-xs text-center">
-                  <p>PUX345678</p>
-                </div>
-                
-                <div className="flex justify-between mt-4">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs"
-                  >
-                    View
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    className="bg-primary text-white text-xs"
-                  >
-                    Print
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="office" className="space-y-6 mt-2">
-          <div className="grid place-items-center py-10">
-            <div className="text-center">
-              <Briefcase className="h-16 w-16 mx-auto mb-6 text-primary" />
-              <h2 className="text-2xl font-bold mb-4">Office Portal</h2>
-              <p className="text-muted-foreground mb-8 max-w-md">Access office functions including leave management and departmental tasks.</p>
-              <Button 
-                onClick={handleOfficeClick}
-                className="bg-primary text-white px-8 py-2"
-              >
-                <Briefcase className="mr-2 h-4 w-4" />
-                Go to Office Dashboard
-              </Button>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="settings" className="space-y-6 mt-2">
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle>Account Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" value={user?.username} readOnly />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" value={user?.email} readOnly />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="department">Department</Label>
-                  <Input id="department" value="Land Administration" readOnly />
-                </div>
-                <Button className="bg-primary text-white mt-4">
-                  Change Password
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <TabsContent value="overview" className="space-y-6 mt-2">
+        <StatsGrid />
+      </TabsContent>
+      
+      <TabsContent value="users" className="space-y-6 mt-2">
+        <PublicUserManagement />
+      </TabsContent>
+      
+      <TabsContent value="scan" className="space-y-6 mt-2">
+        <ScanQrCode />
+      </TabsContent>
     </DashboardLayout>
   );
 };

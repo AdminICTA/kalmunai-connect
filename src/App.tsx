@@ -13,6 +13,7 @@ import AdminDashboard from "./pages/dashboard/admin";
 import StaffDashboard from "./pages/dashboard/staff";
 import EmployeeDashboard from "./pages/dashboard/employee";
 import PublicDashboard from "./pages/dashboard/public";
+import PublicDetails from "./pages/PublicDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -113,6 +114,16 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requiredRole={["Admin", "Staff", "User"]}>
             <EmployeeDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Public details route - accessible to staff */}
+      <Route 
+        path="/public-details/:id" 
+        element={
+          <ProtectedRoute requiredRole="Staff">
+            <PublicDetails />
           </ProtectedRoute>
         } 
       />
