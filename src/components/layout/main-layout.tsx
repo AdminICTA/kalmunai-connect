@@ -1,10 +1,12 @@
 
 import { ReactNode, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Logo } from "@/components/ui/logo";
 import { NavLink } from "@/components/ui/nav-link";
 import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/ui/back-button";
 import { useAuth } from "@/auth/auth-context";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,11 +26,14 @@ import { LogOut, User, Settings, Menu } from "lucide-react";
 
 interface MainLayoutProps {
   children: ReactNode;
+  hideBackButton?: boolean;
 }
 
-export const MainLayout = ({ children }: MainLayoutProps) => {
+export const MainLayout = ({ children, hideBackButton = false }: MainLayoutProps) => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -41,13 +46,21 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
     return `/dashboard/${user.role_id.toLowerCase()}`;
   };
 
+  // Hide back button on homepage
+  const showBackButton = !hideBackButton && location.pathname !== "/";
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
         <div className="container flex h-16 items-center justify-between py-4">
-          <Link to="/" className="flex items-center">
-            <Logo />
-          </Link>
+          <div className="flex items-center gap-4">
+            {showBackButton && (
+              <BackButton className="mr-2" />
+            )}
+            <Link to="/" className="flex items-center">
+              <Logo />
+            </Link>
+          </div>
 
           <nav className="hidden md:flex items-center space-x-6">
             <NavLink to="/">Home</NavLink>

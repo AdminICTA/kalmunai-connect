@@ -3,9 +3,10 @@ import { ReactNode, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/ui/back-button";
 import { useAuth } from "@/auth/auth-context";
 import { Card } from "@/components/ui/card";
-import { LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu, X, Home } from "lucide-react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -89,6 +90,15 @@ export const DashboardLayout = ({
           </div>
           
           <div className="space-y-1">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-left text-white/80 hover:text-white hover:bg-white/10 mb-4"
+              onClick={() => navigate("/")}
+            >
+              <Home className="mr-2 h-4 w-4" />
+              Home
+            </Button>
+          
             {menu.map((item) => (
               <Button
                 key={item.value}
@@ -120,7 +130,13 @@ export const DashboardLayout = ({
         <div className="flex-1 flex flex-col">
           {/* Mobile Header with menu button */}
           <header className="md:hidden bg-primary text-white p-4 flex items-center justify-between">
-            <Logo className="scale-75" />
+            <div className="flex items-center gap-3">
+              <BackButton
+                variant="ghost"
+                className="text-white/80 hover:text-white hover:bg-white/10 p-2"
+              />
+              <Logo className="scale-75" />
+            </div>
             
             <div className="flex items-center space-x-2">
               <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
@@ -139,6 +155,18 @@ export const DashboardLayout = ({
                     </div>
                     
                     <div className="space-y-1">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-left text-white/80 hover:text-white hover:bg-white/10 mb-4"
+                        onClick={() => {
+                          navigate("/");
+                          setIsSidebarOpen(false);
+                        }}
+                      >
+                        <Home className="mr-2 h-4 w-4" />
+                        Home
+                      </Button>
+                      
                       {menu.map((item) => (
                         <Button
                           key={item.value}
@@ -171,15 +199,15 @@ export const DashboardLayout = ({
           </header>
 
           {/* Page Title */}
-          <div className="p-6 bg-accent/5">
-            <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+          <div className="p-4 md:p-6 bg-accent/5">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
             {subtitle && (
               <p className="text-muted-foreground mt-1">{subtitle}</p>
             )}
           </div>
 
           {/* Content */}
-          <div className="flex-1 p-6">
+          <div className="flex-1 p-4 md:p-6">
             <Card className="bg-white/90 backdrop-blur-sm border shadow-md p-4 md:p-6">
               <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                 {children}
