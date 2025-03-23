@@ -5,6 +5,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/auth/auth-context";
+import { RegisterModal } from "@/components/registration/register-modal";
 import { 
   ChevronRight, 
   FileText, 
@@ -19,11 +20,11 @@ import {
   ExternalLink
 } from "lucide-react";
 
-// Create refs for smooth scrolling
 const Index = () => {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
+  const [registerModalOpen, setRegisterModalOpen] = useState(false);
 
   // Create refs for each section
   const servicesRef = useRef<HTMLDivElement>(null);
@@ -72,48 +73,48 @@ const Index = () => {
   return (
     <MainLayout>
       {/* Sticky Navigation */}
-      <div className="sticky top-0 z-50 bg-gradient-to-r from-kalmunai-blue to-kalmunai-navy shadow-md">
+      <div className="sticky top-0 z-50 bg-sidebar">
         <div className="container mx-auto">
           <div className="flex justify-end py-2 space-x-4">
             <Button 
               variant="ghost" 
               onClick={() => scrollToSection({ current: document.documentElement })}
-              className="text-white hover:bg-white/10"
+              className="text-sidebar-foreground hover:bg-sidebar-accent/10"
             >
               Home
             </Button>
             <Button 
               variant="ghost" 
               onClick={() => scrollToSection(servicesRef)}
-              className="text-white hover:bg-white/10"
+              className="text-sidebar-foreground hover:bg-sidebar-accent/10"
             >
               Services
             </Button>
             <Button 
               variant="ghost" 
               onClick={() => scrollToSection(aboutRef)}
-              className="text-white hover:bg-white/10"
+              className="text-sidebar-foreground hover:bg-sidebar-accent/10"
             >
               About
             </Button>
             <Button 
               variant="ghost" 
               onClick={() => scrollToSection(contactRef)}
-              className="text-white hover:bg-white/10"
+              className="text-sidebar-foreground hover:bg-sidebar-accent/10"
             >
               Contact
             </Button>
             {isAuthenticated ? (
               <Button 
                 onClick={() => navigate(`/dashboard/${user?.role_id?.toLowerCase()}`)}
-                className="bg-accent text-accent-foreground hover:bg-accent/90"
+                className="bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/90"
               >
                 Dashboard
               </Button>
             ) : (
               <Button 
                 onClick={() => navigate("/login")}
-                className="bg-accent text-accent-foreground hover:bg-accent/90"
+                className="bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/90"
               >
                 Sign In
               </Button>
@@ -124,16 +125,16 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-kalmunai-blue/40 to-kalmunai-green/30 z-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-sidebar/40 to-sidebar-primary/30 z-0"></div>
         <div className="container relative z-10 py-20 md:py-32">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className={`space-y-6 ${mounted ? 'animate-fade-up' : 'opacity-0'}`}>
-              <div className="inline-block rounded-lg bg-accent/90 px-3 py-1 text-sm text-accent-foreground font-medium">
+              <div className="inline-block rounded-lg bg-sidebar-accent/90 px-3 py-1 text-sm text-sidebar-accent-foreground font-medium">
                 Official Government Portal
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
                 Divisional Secretariat
-                <span className="block text-kalmunai-blue mt-2">Kalmunai</span>
+                <span className="block text-sidebar-primary mt-2">Kalmunai</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-md">
                 Streamlined government services for citizens, businesses, and government employees.
@@ -143,7 +144,7 @@ const Index = () => {
                   <Button 
                     size="lg" 
                     onClick={() => navigate(`/dashboard/${user?.role_id?.toLowerCase()}`)}
-                    className="bg-primary hover:bg-primary/90 text-white"
+                    className="bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
                   >
                     Go to Dashboard
                     <ChevronRight className="ml-2 h-4 w-4" />
@@ -152,17 +153,17 @@ const Index = () => {
                   <>
                     <Button 
                       size="lg" 
-                      onClick={() => navigate("/login")}
-                      className="bg-primary hover:bg-primary/90 text-white"
+                      onClick={() => setRegisterModalOpen(true)}
+                      className="bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
                     >
-                      Sign In
-                      <ChevronRight className="ml-2 h-4 w-4" />
+                      Register Now
+                      <UserCheck className="ml-2 h-4 w-4" />
                     </Button>
                     <Button 
                       size="lg" 
                       variant="outline"
                       onClick={() => scrollToSection(servicesRef)}
-                      className="border-primary text-primary hover:bg-primary/10"
+                      className="border-sidebar-primary text-sidebar-primary hover:bg-sidebar-primary/10"
                     >
                       View Services
                     </Button>
@@ -172,14 +173,14 @@ const Index = () => {
               <Button 
                 variant="ghost" 
                 onClick={() => scrollToSection(servicesRef)}
-                className="text-primary animate-bounce"
+                className="text-sidebar-primary animate-bounce"
               >
                 <ArrowDown className="h-6 w-6" />
               </Button>
             </div>
             <div className={`flex justify-center ${mounted ? 'animate-fade-in' : 'opacity-0'}`}>
               <div className="relative w-[280px] h-[280px] md:w-[380px] md:h-[380px]">
-                <div className="absolute inset-0 rounded-full bg-gradient-radial from-accent/50 to-white/90 shadow-glass animate-pulse"></div>
+                <div className="absolute inset-0 rounded-full bg-gradient-radial from-sidebar-accent/50 to-white/90 shadow-glass animate-pulse"></div>
                 <img 
                   src="/lovable-uploads/logo.png" 
                   alt="Divisional Secretariat - Kalmunai" 
@@ -192,7 +193,7 @@ const Index = () => {
       </section>
 
       {/* Services Section */}
-      <section ref={servicesRef} className="py-16 bg-gradient-to-br from-white to-accent/10">
+      <section ref={servicesRef} className="py-16 bg-gradient-to-br from-white to-sidebar-accent/10">
         <div className="container">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="text-3xl font-bold tracking-tight">Our Services</h2>
@@ -203,10 +204,10 @@ const Index = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {services.map((service, index) => (
-              <Card key={service.title} className={`glass-card rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border-accent/20 ${mounted ? `fade-up-delay-${index + 1}` : 'opacity-0'}`}>
+              <Card key={service.title} className={`glass-card rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border-sidebar-accent/20 ${mounted ? `fade-up-delay-${index + 1}` : 'opacity-0'}`}>
                 <CardContent className="p-6">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                    <service.icon className="h-6 w-6 text-primary" />
+                  <div className="w-12 h-12 rounded-lg bg-sidebar-primary/10 flex items-center justify-center mb-4">
+                    <service.icon className="h-6 w-6 text-sidebar-primary" />
                   </div>
                   <h3 className="text-lg font-medium mb-2">{service.title}</h3>
                   <p className="text-muted-foreground text-sm mb-4">
@@ -215,7 +216,7 @@ const Index = () => {
                   <Button 
                     variant="link" 
                     asChild
-                    className="p-0 text-primary hover:text-primary/80"
+                    className="p-0 text-sidebar-primary hover:text-sidebar-primary/80"
                   >
                     <Link to={service.href}>
                       Learn more
@@ -251,7 +252,7 @@ const Index = () => {
               </div>
               <div className="mt-6">
                 <Button 
-                  className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                  className="bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
                   onClick={() => navigate("/documentation")}
                 >
                   Learn More About Us
@@ -260,7 +261,7 @@ const Index = () => {
               </div>
             </div>
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-br from-secondary/20 to-accent/30 rounded-xl blur-xl opacity-70"></div>
+              <div className="absolute -inset-4 bg-gradient-to-br from-secondary/20 to-sidebar-accent/30 rounded-xl blur-xl opacity-70"></div>
               <Card className="relative z-10 overflow-hidden border-0 shadow-xl">
                 <CardContent className="p-0">
                   <img 
@@ -276,7 +277,7 @@ const Index = () => {
       </section>
 
       {/* Contact Section */}
-      <section ref={contactRef} className="py-16 bg-gradient-to-br from-accent/10 to-white">
+      <section ref={contactRef} className="py-16 bg-gradient-to-br from-sidebar-accent/10 to-white">
         <div className="container">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="text-3xl font-bold tracking-tight">Contact Us</h2>
@@ -286,10 +287,10 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="glass-card shadow-md hover:shadow-lg transition-all duration-300 border-accent/20">
+            <Card className="glass-card shadow-md hover:shadow-lg transition-all duration-300 border-sidebar-accent/20">
               <CardContent className="p-6">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <Map className="h-6 w-6 text-primary" />
+                <div className="w-12 h-12 rounded-full bg-sidebar-primary/10 flex items-center justify-center mb-4">
+                  <Map className="h-6 w-6 text-sidebar-primary" />
                 </div>
                 <h3 className="text-lg font-medium mb-2">Our Location</h3>
                 <p className="text-muted-foreground text-sm mb-4">
@@ -300,7 +301,7 @@ const Index = () => {
                 <Button 
                   variant="link" 
                   onClick={() => window.open("https://maps.google.com", "_blank")}
-                  className="p-0 text-primary hover:text-primary/80"
+                  className="p-0 text-sidebar-primary hover:text-sidebar-primary/80"
                 >
                   View on Map
                   <ExternalLink className="ml-1 h-4 w-4" />
@@ -308,10 +309,10 @@ const Index = () => {
               </CardContent>
             </Card>
             
-            <Card className="glass-card shadow-md hover:shadow-lg transition-all duration-300 border-accent/20">
+            <Card className="glass-card shadow-md hover:shadow-lg transition-all duration-300 border-sidebar-accent/20">
               <CardContent className="p-6">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <Phone className="h-6 w-6 text-primary" />
+                <div className="w-12 h-12 rounded-full bg-sidebar-primary/10 flex items-center justify-center mb-4">
+                  <Phone className="h-6 w-6 text-sidebar-primary" />
                 </div>
                 <h3 className="text-lg font-medium mb-2">Phone & Email</h3>
                 <p className="text-muted-foreground text-sm mb-1">
@@ -326,7 +327,7 @@ const Index = () => {
                 <Button 
                   variant="link" 
                   onClick={() => window.location.href = "mailto:info@dskalmunai.lk"}
-                  className="p-0 text-primary hover:text-primary/80"
+                  className="p-0 text-sidebar-primary hover:text-sidebar-primary/80"
                 >
                   Send Email
                   <Mail className="ml-1 h-4 w-4" />
@@ -334,10 +335,10 @@ const Index = () => {
               </CardContent>
             </Card>
             
-            <Card className="glass-card shadow-md hover:shadow-lg transition-all duration-300 border-accent/20">
+            <Card className="glass-card shadow-md hover:shadow-lg transition-all duration-300 border-sidebar-accent/20">
               <CardContent className="p-6">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <Clock className="h-6 w-6 text-primary" />
+                <div className="w-12 h-12 rounded-full bg-sidebar-primary/10 flex items-center justify-center mb-4">
+                  <Clock className="h-6 w-6 text-sidebar-primary" />
                 </div>
                 <h3 className="text-lg font-medium mb-2">Office Hours</h3>
                 <p className="text-muted-foreground text-sm mb-1">
@@ -352,7 +353,7 @@ const Index = () => {
                 <Button 
                   variant="link" 
                   onClick={() => navigate("/contact")}
-                  className="p-0 text-primary hover:text-primary/80"
+                  className="p-0 text-sidebar-primary hover:text-sidebar-primary/80"
                 >
                   Special Appointments
                   <ChevronRight className="ml-1 h-4 w-4" />
@@ -366,24 +367,25 @@ const Index = () => {
       {/* CTA Section */}
       <section className="py-16">
         <div className="container">
-          <div className="max-w-4xl mx-auto bg-gradient-to-br from-primary to-secondary rounded-xl overflow-hidden shadow-xl">
-            <div className="p-8 md:p-12 text-white">
+          <div className="max-w-4xl mx-auto bg-gradient-to-br from-sidebar to-sidebar-primary rounded-xl overflow-hidden shadow-xl">
+            <div className="p-8 md:p-12 text-sidebar-foreground">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">Get Your Digital ID Today</h2>
-              <p className="text-primary-foreground/90 mb-6 max-w-lg">
+              <p className="text-sidebar-foreground/90 mb-6 max-w-lg">
                 Register for a digital ID to access all government services with ease. 
                 Apply online and visit our office for verification.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
-                  onClick={() => navigate("/login")}
-                  className="bg-white text-primary hover:bg-white/90"
+                  onClick={() => setRegisterModalOpen(true)}
+                  className="bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/90"
                 >
                   Register Now
+                  <UserCheck className="ml-2 h-4 w-4" />
                 </Button>
                 <Button 
                   variant="outline"
                   onClick={() => scrollToSection(servicesRef)}
-                  className="border-white text-white hover:bg-white/10"
+                  className="border-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/10"
                 >
                   Explore Services
                 </Button>
@@ -392,6 +394,12 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Registration Modal */}
+      <RegisterModal 
+        open={registerModalOpen} 
+        onOpenChange={setRegisterModalOpen} 
+      />
     </MainLayout>
   );
 };
