@@ -30,8 +30,8 @@ const Index = () => {
   const aboutRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to section function
-  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+  // Updated scrollToSection function to handle different element types
+  const scrollToSection = (ref: React.RefObject<HTMLElement> | { current: HTMLElement | null }) => {
     if (ref.current) {
       ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
