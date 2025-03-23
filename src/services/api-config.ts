@@ -100,6 +100,8 @@ export const ENDPOINTS = {
   // Messages endpoints
   MESSAGES: {
     GET_ALL: (userId: string) => `${API_BASE_URL}/messages/get-all.php?user_id=${userId}`,
+    GET_NEW: (userId: string, lastTimestamp: string) => 
+      `${API_BASE_URL}/messages/get-new.php?user_id=${userId}&last_timestamp=${encodeURIComponent(lastTimestamp)}`,
     MARK_READ: `${API_BASE_URL}/messages/mark-read.php`,
     SEND: `${API_BASE_URL}/messages/send.php`,
   },

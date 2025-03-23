@@ -10,6 +10,8 @@ import { LogOut, Menu, X, Home } from "lucide-react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { UserProfile } from "@/components/ui/user-profile";
+import { useUser } from "@/contexts/user-context";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -29,6 +31,7 @@ export const DashboardLayout = ({
   menu,
 }: DashboardLayoutProps) => {
   const { logout } = useAuth();
+  const { username } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>(menu[0]?.value || "");
@@ -63,6 +66,11 @@ export const DashboardLayout = ({
     navigate("/");
   };
 
+  const handleSettingsClick = () => {
+    navigate("/settings");
+    setIsSidebarOpen(false);
+  };
+
   // Function to filter children based on active tab
   const filterChildrenByTab = (children: ReactNode): ReactNode => {
     // If children is an array, find the child with the matching tab value
@@ -87,6 +95,12 @@ export const DashboardLayout = ({
         <div className="w-64 bg-primary text-white p-4 shadow-lg hidden md:block">
           <div className="flex items-center justify-center mb-8 pt-2">
             <Logo className="scale-90" />
+          </div>
+
+          {/* User profile info in sidebar */}
+          <div className="mb-6 p-3 bg-white/10 rounded-lg text-center">
+            <p className="font-medium text-white">Welcome, {username}</p>
+            <p className="text-xs text-white/70">Logged in</p>
           </div>
           
           <div className="space-y-1">
@@ -117,7 +131,16 @@ export const DashboardLayout = ({
             
             <Button
               variant="ghost"
-              className="w-full justify-start text-left text-white/80 hover:text-white hover:bg-white/10 mt-8"
+              className="w-full justify-start text-left text-white/80 hover:text-white hover:bg-white/10 mt-4"
+              onClick={handleSettingsClick}
+            >
+              <Menu className="mr-2 h-4 w-4" />
+              Settings
+            </Button>
+
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-left text-white/80 hover:text-white hover:bg-white/10 mt-2"
               onClick={handleLogout}
             >
               <LogOut className="mr-2 h-4 w-4" />
@@ -139,6 +162,7 @@ export const DashboardLayout = ({
             </div>
             
             <div className="flex items-center space-x-2">
+              <UserProfile />
               <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="text-white">
@@ -152,6 +176,12 @@ export const DashboardLayout = ({
                       <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
                         <X className="h-5 w-5 text-white" />
                       </Button>
+                    </div>
+                    
+                    {/* User profile info in mobile sidebar */}
+                    <div className="mb-6 p-3 bg-white/10 rounded-lg text-center">
+                      <p className="font-medium text-white">Welcome, {username}</p>
+                      <p className="text-xs text-white/70">Logged in</p>
                     </div>
                     
                     <div className="space-y-1">
@@ -185,7 +215,16 @@ export const DashboardLayout = ({
                       
                       <Button
                         variant="ghost"
-                        className="w-full justify-start text-left text-white/80 hover:text-white hover:bg-white/10 mt-8"
+                        className="w-full justify-start text-left text-white/80 hover:text-white hover:bg-white/10 mt-4"
+                        onClick={handleSettingsClick}
+                      >
+                        <Menu className="mr-2 h-4 w-4" />
+                        Settings
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-left text-white/80 hover:text-white hover:bg-white/10 mt-2"
                         onClick={handleLogout}
                       >
                         <LogOut className="mr-2 h-4 w-4" />
@@ -198,9 +237,15 @@ export const DashboardLayout = ({
             </div>
           </header>
 
-          {/* Page Title */}
-          <div className="p-4 md:p-6 bg-accent/5">
+          {/* Desktop Header */}
+          <header className="hidden md:flex items-center justify-between p-4 bg-white/50 border-b">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
+            <UserProfile />
+          </header>
+
+          {/* Page Title for Mobile */}
+          <div className="p-4 md:hidden bg-accent/5">
+            <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
             {subtitle && (
               <p className="text-muted-foreground mt-1">{subtitle}</p>
             )}

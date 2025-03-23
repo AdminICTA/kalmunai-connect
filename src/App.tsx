@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth, AuthProvider } from "@/auth/auth-context";
+import { UserProvider } from "@/contexts/user-context";
 
 // Pages
 import Index from "./pages/Index";
@@ -14,6 +15,7 @@ import StaffDashboard from "./pages/dashboard/staff";
 import EmployeeDashboard from "./pages/dashboard/employee";
 import PublicDashboard from "./pages/dashboard/public";
 import PublicDetails from "./pages/PublicDetails";
+import SettingsPage from "./pages/settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -128,6 +130,16 @@ const AppRoutes = () => {
         } 
       />
       
+      {/* Settings route - accessible to all authenticated users */}
+      <Route 
+        path="/settings" 
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Documentation route - will add more pages as needed */}
       <Route path="/documentation" element={<div className="container py-8">Documentation</div>} />
       <Route path="/services" element={<div className="container py-8">Services</div>} />
@@ -135,11 +147,6 @@ const AppRoutes = () => {
       <Route path="/contact" element={<div className="container py-8">Contact</div>} />
       <Route path="/privacy" element={<div className="container py-8">Privacy Policy</div>} />
       <Route path="/terms" element={<div className="container py-8">Terms of Service</div>} />
-      <Route path="/settings" element={
-        <ProtectedRoute>
-          <div className="container py-8">Settings</div>
-        </ProtectedRoute>
-      } />
       
       {/* Catch-all route */}
       <Route path="*" element={<NotFound />} />
@@ -150,13 +157,15 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
+      <UserProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </UserProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
