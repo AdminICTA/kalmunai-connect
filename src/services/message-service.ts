@@ -21,6 +21,11 @@ interface MessagesResponse {
   message?: string;
 }
 
+interface MessageResponse {
+  success: boolean;
+  message?: string;
+}
+
 /**
  * Service for message-related API calls
  */
@@ -50,7 +55,7 @@ class MessageService {
    */
   async sendMessage(senderId: string, receiverId: string, message: string): Promise<boolean> {
     try {
-      const response = await apiService.post(ENDPOINTS.MESSAGES.SEND, {
+      const response = await apiService.post<MessageResponse>(ENDPOINTS.MESSAGES.SEND, {
         sender_id: senderId,
         receiver_id: receiverId,
         message
@@ -68,7 +73,7 @@ class MessageService {
    */
   async markAsRead(messageId: string): Promise<boolean> {
     try {
-      const response = await apiService.post(ENDPOINTS.MESSAGES.MARK_READ, {
+      const response = await apiService.post<MessageResponse>(ENDPOINTS.MESSAGES.MARK_READ, {
         message_id: messageId
       });
       

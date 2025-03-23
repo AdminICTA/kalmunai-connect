@@ -15,6 +15,12 @@ import { useUser } from "@/contexts/user-context";
 import { apiService } from "@/services/api-service";
 import { ENDPOINTS } from "@/services/api-config";
 
+// Define response type for user update operations
+interface UserUpdateResponse {
+  success: boolean;
+  message?: string;
+}
+
 const profileFormSchema = z.object({
   username: z.string().min(2, {
     message: "Username must be at least 2 characters.",
@@ -69,7 +75,7 @@ export default function SettingsPage() {
   async function onProfileSubmit(data: ProfileFormValues) {
     setIsLoading(true);
     try {
-      const response = await apiService.put(`${ENDPOINTS.USERS.UPDATE}`, {
+      const response = await apiService.put<UserUpdateResponse>(`${ENDPOINTS.USERS.UPDATE}`, {
         id: userId,
         username: data.username,
         email: data.email,
@@ -93,7 +99,7 @@ export default function SettingsPage() {
   async function onPasswordSubmit(data: PasswordFormValues) {
     setIsLoading(true);
     try {
-      const response = await apiService.put(`${ENDPOINTS.USERS.UPDATE}`, {
+      const response = await apiService.put<UserUpdateResponse>(`${ENDPOINTS.USERS.UPDATE}`, {
         id: userId,
         current_password: data.currentPassword,
         new_password: data.newPassword,
