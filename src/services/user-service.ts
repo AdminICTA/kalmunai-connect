@@ -46,7 +46,7 @@ class UserService {
    */
   async getUserById(id: string): Promise<User | null> {
     try {
-      const response = await apiService.get<UserResponse>(ENDPOINTS.USERS.GET_BY_ID(id));
+      const response = await apiService.get<UserResponse>(ENDPOINTS.USERS.GET_ONE(id));
       
       if (!response.success || !response.data) {
         toast.error(response.message || 'Failed to fetch user');
