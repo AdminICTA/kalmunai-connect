@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/auth/auth-context";
-import { AtSign, Lock } from "lucide-react";
+import { AtSign, Lock, ArrowLeft } from "lucide-react";
 
 const Login = () => {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
@@ -52,7 +52,17 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#2F4D66] to-[#5CA9AF] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1A2640] to-[#2F4D66] p-4">
+      {/* Back Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-4 left-4 text-white/80 hover:text-white hover:bg-white/10"
+        onClick={() => navigate("/")}
+      >
+        <ArrowLeft size={24} />
+      </Button>
+      
       <div className="w-full max-w-5xl bg-[#1A2640] rounded-2xl shadow-2xl overflow-hidden flex">
         {/* Left Side - Login Form */}
         <div className="w-full md:w-2/5 p-8 flex flex-col justify-center">

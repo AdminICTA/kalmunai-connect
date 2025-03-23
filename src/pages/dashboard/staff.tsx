@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/auth/auth-context";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { TabsContent } from "@/components/ui/tabs";
@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/ui/modal-form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,10 +25,21 @@ import {
   Scan,
   FileText,
   Search,
-  Eye
+  Eye,
+  Bell
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 // Placeholder stats component
 const StatsGrid = () => {
@@ -94,6 +104,7 @@ const PublicUserManagement = () => {
   const [isViewIdCardModalOpen, setIsViewIdCardModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [notifications, setNotifications] = useState<any[]>([]);
   const navigate = useNavigate();
 
   // Public user form schema
@@ -128,6 +139,49 @@ const PublicUserManagement = () => {
       nic: "",
     },
   });
+
+  // Fetch notifications (simulated)
+  useEffect(() => {
+    // Simulate fetching notifications from backend
+    const mockNotifications = [
+      { 
+        id: "n1", 
+        type: "new_registration", 
+        title: "New Registration", 
+        message: "Fathima Rizna has registered through online portal", 
+        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        user: { 
+          id: "p1", 
+          qr_code: "DSPUB-12345", 
+          full_name: "Fathima Rizna", 
+          email: "fathima@example.com",
+          phone: "0771234567", 
+          address: "123 Main St, Kalmunai", 
+          nic: "901234567V" 
+        },
+        isRead: false 
+      },
+      { 
+        id: "n2", 
+        type: "new_registration", 
+        title: "New Registration", 
+        message: "Mohamed Rifan has registered through online portal", 
+        timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+        user: { 
+          id: "p2", 
+          qr_code: "DSPUB-23456", 
+          full_name: "Mohamed Rifan", 
+          email: "mohamed@example.com",
+          phone: "0772345678", 
+          address: "456 Oak St, Kalmunai", 
+          nic: "912345678V" 
+        },
+        isRead: true 
+      }
+    ];
+    
+    setNotifications(mockNotifications);
+  }, []);
 
   // Function to handle adding a new public user
   const onAddPublicUser = (data: z.infer<typeof publicUserFormSchema>) => {
@@ -168,6 +222,19 @@ const PublicUserManagement = () => {
     setIsViewIdCardModalOpen(true);
   };
 
+  // Function to mark notification as read and create ID card
+  const handleNotificationAction = (notification: any) => {
+    if (notification.type === "new_registration") {
+      // Mark as read (would normally update in database)
+      setNotifications(prev => 
+        prev.map(n => n.id === notification.id ? {...n, isRead: true} : n)
+      );
+      
+      // View the ID card for this user
+      handleViewIdCard(notification.user);
+    }
+  };
+
   // Function to handle scanning a QR code
   const handleScanQrCode = () => {
     // Here you would normally open a QR code scanner
@@ -194,11 +261,89 @@ const PublicUserManagement = () => {
     user.phone.includes(searchTerm)
   );
 
+  // Format notification time
+  const formatNotificationTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    
+    if (diffMinutes < 60) {
+      return `${diffMinutes} minutes ago`;
+    } else if (diffMinutes < 24 * 60) {
+      return `${Math.floor(diffMinutes / 60)} hours ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  const unreadNotificationsCount = notifications.filter(n => !n.isRead).length;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold">Public User Management</h2>
         <div className="flex flex-col sm:flex-row gap-2">
+          {/* Notification Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline"
+                className="bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 relative"
+              >
+                <Bell className="h-4 w-4 mr-2" />
+                Notifications
+                {unreadNotificationsCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                  >
+                    {unreadNotificationsCount}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-80" align="end">
+              <DropdownMenuLabel>Recent Notifications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {notifications.length > 0 ? (
+                <DropdownMenuGroup>
+                  {notifications.map((notification) => (
+                    <DropdownMenuItem 
+                      key={notification.id} 
+                      className="flex flex-col items-start py-2 px-4 cursor-pointer"
+                      onClick={() => handleNotificationAction(notification)}
+                    >
+                      <div className="flex w-full justify-between items-start">
+                        <span className="font-medium">{notification.title}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatNotificationTime(notification.timestamp)}
+                        </span>
+                      </div>
+                      <span className="text-sm text-muted-foreground">{notification.message}</span>
+                      <div className="w-full flex justify-end mt-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-7 text-xs text-primary"
+                        >
+                          Create ID Card
+                        </Button>
+                      </div>
+                      {!notification.isRead && (
+                        <div className="absolute right-3 top-3 h-2 w-2 rounded-full bg-blue-500" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuGroup>
+              ) : (
+                <div className="py-3 px-4 text-center text-muted-foreground">
+                  No notifications
+                </div>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button 
             onClick={handleScanQrCode} 
             variant="outline"
@@ -496,47 +641,78 @@ const PublicUserManagement = () => {
       >
         {selectedUser && (
           <div className="space-y-4">
-            <div className="border rounded-lg p-4 bg-white">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="text-center">
-                  <h3 className="font-bold text-xl">Divisional Secretariat</h3>
-                  <h4 className="font-semibold text-lg">Kalmunai</h4>
-                  <p className="text-sm text-muted-foreground">Official Identification Card</p>
-                </div>
-                
-                <div className="w-24 h-24 rounded-full bg-gray-200 mb-2 flex items-center justify-center text-gray-500">
-                  <UserSearch className="h-12 w-12" />
-                </div>
-                
-                <div className="text-center">
-                  <h3 className="font-bold">{selectedUser.full_name}</h3>
-                  <p className="text-sm text-muted-foreground">ID: {selectedUser.id}</p>
-                </div>
-                
-                <div className="border-t pt-4 w-full">
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <p className="font-semibold">NIC:</p>
-                    <p>{selectedUser.nic}</p>
-                    <p className="font-semibold">Phone:</p>
-                    <p>{selectedUser.phone}</p>
+            {/* Updated professional ID card design */}
+            <div className="relative mx-auto w-full max-w-[360px] h-[220px] rounded-xl overflow-hidden border-2 border-black/10 shadow-lg">
+              {/* Card background with gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-flower-darkBlue via-flower-mediumBlue to-flower-teal"></div>
+              
+              {/* Card security pattern */}
+              <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml,%3Csvg width=\"100\" height=\"100\" viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cpath d=\"M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z\" fill=\"%23ffffff\" fill-opacity=\"1\" fill-rule=\"evenodd\"/%3E%3C/svg%3E')]"></div>
+              
+              {/* Security hologram effect */}
+              <div className="absolute top-2 right-2 w-12 h-12 rounded-full bg-gradient-to-br from-white/30 to-transparent border border-white/20"></div>
+
+              {/* Left side - Photo */}
+              <div className="absolute top-0 left-0 h-full w-1/3 p-4 flex flex-col justify-between items-center">
+                <div className="w-full">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white/50">
+                    <UserSearch className="h-12 w-12 text-flower-darkBlue" />
                   </div>
                 </div>
                 
-                <div className="pt-2">
+                <div className="w-full">
                   <QRCodeSVG
                     value={selectedUser.qr_code}
-                    size={120}
+                    size={75}
                     level="H"
-                    includeMargin={true}
+                    bgColor="#ffffff"
+                    fgColor="#000000"
                   />
-                  <p className="text-xs text-center mt-1">{selectedUser.qr_code}</p>
+                </div>
+              </div>
+              
+              {/* Right side - Information */}
+              <div className="absolute top-0 right-0 h-full w-2/3 p-4 flex flex-col justify-between">
+                {/* Header */}
+                <div className="text-center text-white">
+                  <h3 className="font-bold text-sm uppercase tracking-wider">Democratic Socialist Republic of Sri Lanka</h3>
+                  <h4 className="font-semibold text-xs">Divisional Secretariat - Kalmunai</h4>
+                  <div className="mt-1 bg-white/20 py-0.5 px-2 rounded text-xs font-medium inline-block">
+                    OFFICIAL ID
+                  </div>
+                </div>
+                
+                {/* User details */}
+                <div className="text-white space-y-0.5">
+                  <div className="grid grid-cols-3 text-xs">
+                    <span className="font-semibold">Name:</span>
+                    <span className="col-span-2 font-medium truncate">{selectedUser.full_name}</span>
+                  </div>
+                  <div className="grid grid-cols-3 text-xs">
+                    <span className="font-semibold">NIC:</span>
+                    <span className="col-span-2">{selectedUser.nic}</span>
+                  </div>
+                  <div className="grid grid-cols-3 text-xs">
+                    <span className="font-semibold">Address:</span>
+                    <span className="col-span-2 truncate">{selectedUser.address}</span>
+                  </div>
+                  <div className="grid grid-cols-3 text-xs">
+                    <span className="font-semibold">Contact:</span>
+                    <span className="col-span-2">{selectedUser.phone}</span>
+                  </div>
+                </div>
+                
+                {/* Footer */}
+                <div className="text-white text-center text-xxs">
+                  <p className="text-[8px] opacity-80">ID: {selectedUser.qr_code}</p>
+                  <p className="text-[7px] opacity-70">This card is property of Divisional Secretariat Kalmunai. If found, please return.</p>
                 </div>
               </div>
             </div>
             
-            <div className="flex justify-end space-x-2 pt-2">
+            {/* Card actions */}
+            <div className="flex justify-center space-x-4 pt-4">
               <Button 
-                type="button" 
                 variant="outline" 
                 onClick={() => {
                   // Handle print functionality
@@ -548,7 +724,6 @@ const PublicUserManagement = () => {
                 Print
               </Button>
               <Button 
-                type="button" 
                 className="bg-primary text-white"
                 onClick={() => {
                   // Handle download functionality
