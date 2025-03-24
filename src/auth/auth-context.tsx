@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { authService } from "@/services/auth-service";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export type UserRole = "Admin" | "Staff" | "User" | null;
 
@@ -29,6 +30,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Check for existing session on component mount
   useEffect(() => {
@@ -61,6 +63,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (response.success && response.user) {
         setUser(response.user as User);
         console.log("Login successful:", response.user);
+        
+        // Navigate based on role
+        const roleId = response.user.role_id;
+        if (roleId === "Admin") {
+          navigate("/dashboard/admin");
+        } else if (roleId === "Staff") {
+          navigate("/dashboard/staff");
+        } else if (roleId === "User") {
+          navigate("/dashboard/user");
+        } else {
+          navigate("/");
+        }
       } else {
         throw new Error(response.message || "Login failed");
       }
@@ -76,6 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Use the auth service to handle logout
     authService.logout();
     setUser(null);
+    navigate("/");
     console.log("User logged out");
   };
 

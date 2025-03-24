@@ -85,10 +85,56 @@ if ($result->num_rows > 0) {
         ]);
     }
 } else {
-    echo json_encode([
-        'success' => false,
-        'message' => 'User not found'
-    ]);
+    // DEMO USERS FOR TESTING
+    if (($usernameOrEmail === "ICTA" && $password === "admin123") || 
+        ($usernameOrEmail === "Staff" && $password === "staff123") || 
+        ($usernameOrEmail === "User" && $password === "user123")) {
+        
+        $token = bin2hex(random_bytes(32));
+        $role = "";
+        $username = "";
+        $email = "";
+        $userId = "";
+        $deptId = "";
+        
+        if ($usernameOrEmail === "ICTA") {
+            $role = "Admin";
+            $username = "ICTA";
+            $email = "icta@dskalmunai.com";
+            $userId = "u1";
+            $deptId = "ADM1";
+        } else if ($usernameOrEmail === "Staff") {
+            $role = "Staff";
+            $username = "Staff";
+            $email = "staff@dskalmunai.com";
+            $userId = "u3";
+            $deptId = "LND1";
+        } else {
+            $role = "User";
+            $username = "User";
+            $email = "user@dskalmunai.com";
+            $userId = "u5";
+            $deptId = "NIC1";
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'message' => 'Login successful',
+            'token' => $token,
+            'user' => [
+                'id' => $userId,
+                'username' => $username,
+                'email' => $email,
+                'role_id' => $role,
+                'department_id' => $deptId
+            ]
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'User not found'
+        ]);
+    }
 }
 
 $conn->close();
