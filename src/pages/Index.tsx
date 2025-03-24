@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/main-layout";
@@ -72,57 +71,6 @@ const Index = () => {
 
   return (
     <MainLayout>
-      {/* Sticky Navigation */}
-      <div className="sticky top-0 z-50 bg-sidebar">
-        <div className="container mx-auto">
-          <div className="flex justify-end py-2 space-x-4">
-            <Button 
-              variant="ghost" 
-              onClick={() => scrollToSection({ current: document.documentElement })}
-              className="text-sidebar-foreground hover:bg-sidebar-accent/10"
-            >
-              Home
-            </Button>
-            <Button 
-              variant="ghost" 
-              onClick={() => scrollToSection(servicesRef)}
-              className="text-sidebar-foreground hover:bg-sidebar-accent/10"
-            >
-              Services
-            </Button>
-            <Button 
-              variant="ghost" 
-              onClick={() => scrollToSection(aboutRef)}
-              className="text-sidebar-foreground hover:bg-sidebar-accent/10"
-            >
-              About
-            </Button>
-            <Button 
-              variant="ghost" 
-              onClick={() => scrollToSection(contactRef)}
-              className="text-sidebar-foreground hover:bg-sidebar-accent/10"
-            >
-              Contact
-            </Button>
-            {isAuthenticated ? (
-              <Button 
-                onClick={() => navigate(`/dashboard/${user?.role_id?.toLowerCase()}`)}
-                className="bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/90"
-              >
-                Dashboard
-              </Button>
-            ) : (
-              <Button 
-                onClick={() => navigate("/login")}
-                className="bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/90"
-              >
-                Sign In
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-sidebar/40 to-sidebar-primary/30 z-0"></div>
@@ -153,11 +101,11 @@ const Index = () => {
                   <>
                     <Button 
                       size="lg" 
-                      onClick={() => setRegisterModalOpen(true)}
+                      onClick={() => navigate("/login")}
                       className="bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
                     >
-                      Register Now
-                      <UserCheck className="ml-2 h-4 w-4" />
+                      Sign In
+                      <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                     <Button 
                       size="lg" 
@@ -182,7 +130,7 @@ const Index = () => {
               <div className="relative w-[280px] h-[280px] md:w-[380px] md:h-[380px]">
                 <div className="absolute inset-0 rounded-full bg-gradient-radial from-sidebar-accent/50 to-white/90 shadow-glass animate-pulse"></div>
                 <img 
-                  src="/lovable-uploads/logo.png" 
+                  src="https://placehold.co/400x400/png?text=Logo" 
                   alt="Divisional Secretariat - Kalmunai" 
                   className="absolute inset-0 m-auto w-3/4 h-3/4 object-contain"
                 />
@@ -369,25 +317,25 @@ const Index = () => {
         <div className="container">
           <div className="max-w-4xl mx-auto bg-gradient-to-br from-sidebar to-sidebar-primary rounded-xl overflow-hidden shadow-xl">
             <div className="p-8 md:p-12 text-sidebar-foreground">
-              <h2 className="text-2xl md:text-3xl font-bold mb-4">Get Your Digital ID Today</h2>
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">Access Government Services</h2>
               <p className="text-sidebar-foreground/90 mb-6 max-w-lg">
-                Register for a digital ID to access all government services with ease. 
+                Sign in to your account to access all government services with ease.
                 Apply online and visit our office for verification.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
-                  onClick={() => setRegisterModalOpen(true)}
+                  onClick={() => navigate("/login")}
                   className="bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/90"
                 >
-                  Register Now
+                  Sign In
                   <UserCheck className="ml-2 h-4 w-4" />
                 </Button>
                 <Button 
                   variant="outline"
-                  onClick={() => scrollToSection(servicesRef)}
+                  onClick={() => setRegisterModalOpen(true)}
                   className="border-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/10"
                 >
-                  Explore Services
+                  Register Now
                 </Button>
               </div>
             </div>
