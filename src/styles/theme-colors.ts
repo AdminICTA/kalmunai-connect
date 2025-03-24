@@ -2,29 +2,42 @@
 /**
  * Theme colors for the application
  * These can be used throughout the app to maintain a consistent color scheme
+ * Updated with color palette from the provided reference images
  */
 
 export const themeColors = {
-  // Primary colors
+  // Primary colors from the first flower image
+  kalmunai: {
+    darkNavy: '#2F4D66',    // Dark navy (from the image palette 2F4D66)
+    teal: '#357D88',        // Teal (from the image palette 357D88)
+    lightTeal: '#5CA9AF',   // Light teal (from the image palette 5CA9AF)
+    copper: '#C98633',      // Copper/amber (from the image palette C98633)
+    red: '#DA4E5A',         // Red (from the image palette DA4E5A)
+    green: '#5C7962',       // Green (from the image palette 5C7962)
+    lightBlue: '#80BEA4',   // Light blue (from the image palette 80BEA4 - second image)
+    darkBlue: '#23312B',    // Dark blue (from the image palette 23312B - second image)
+  },
+  
+  // Primary colors original structure
   primary: {
-    DEFAULT: "#2b6cb0", // Primary blue
-    light: "#4299e1",
-    dark: "#1a365d",
+    DEFAULT: "#2F4D66", // Dark Navy
+    light: "#5CA9AF",
+    dark: "#23312B",
     foreground: "#ffffff",
   },
   
   // Secondary colors
   secondary: {
-    DEFAULT: "#319795", // Teal
-    light: "#4fd1c5",
-    dark: "#234e52",
+    DEFAULT: "#357D88", // Teal
+    light: "#80BEA4",
+    dark: "#2F4D66",
     foreground: "#ffffff",
   },
   
   // Neutral/Background colors
   background: {
     DEFAULT: "#f7fafc",
-    dark: "#1a202c",
+    dark: "#23312B",
     card: "#ffffff",
     muted: "#f1f5f9",
   },
@@ -39,17 +52,17 @@ export const themeColors = {
   
   // Status colors
   status: {
-    success: "#48bb78",
-    warning: "#ed8936",
-    error: "#e53e3e",
-    info: "#4299e1",
+    success: "#5C7962", // Green
+    warning: "#C98633", // Copper/amber
+    error: "#DA4E5A",   // Red
+    info: "#5CA9AF",    // Light teal
   },
   
   // ID Card specific colors (used in the ID card component)
   idCard: {
-    darkBlue: "#1a365d",
-    mediumBlue: "#2b6cb0",
-    teal: "#319795",
+    darkBlue: "#2F4D66",
+    mediumBlue: "#357D88",
+    teal: "#5CA9AF",
   }
 };
 

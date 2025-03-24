@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -64,20 +63,22 @@ export default {
           ring: 'hsl(var(--sidebar-ring))'
         },
         kalmunai: {
-          darkNavy: '#13272E',  // Dark navy blue
-          teal: '#487674',      // Teal
-          lightTeal: '#83B4AE', // Light teal
-          sand: '#E8C69B',      // Sand/beige
-          copper: '#D69369',    // Copper/light orange
-          orange: '#CB6330'     // Orange
+          darkNavy: '#2F4D66',    // Dark navy
+          teal: '#357D88',        // Teal
+          lightTeal: '#5CA9AF',   // Light teal
+          copper: '#C98633',      // Copper/amber
+          red: '#DA4E5A',         // Red
+          green: '#5C7962',       // Green
+          lightBlue: '#80BEA4',   // Light blue
+          darkBlue: '#23312B',    // Dark blue
         },
         flower: {
-          darkBlue: '#1A2640',   // Dark blue (from the login bg)
-          mediumBlue: '#2F4D66', // Medium blue (from the login bg)
-          teal: '#357D88',       // Teal (from the color palette)
-          lightTeal: '#399AA5',  // Light teal (from the color palette)
-          pastelTeal: '#5CA9AF', // Pastel teal (from the color palette)
-          red: '#DA4E5A',        // Red (from the color palette)
+          darkBlue: '#2F4D66',    // Updated to match palette
+          mediumBlue: '#357D88',  // Updated to match palette
+          teal: '#357D88',        // Updated to match palette
+          lightTeal: '#5CA9AF',   // Updated to match palette
+          pastelTeal: '#5CA9AF',  // Updated to match palette
+          red: '#DA4E5A',         // Updated to match palette
         }
       },
       borderRadius: {
@@ -141,9 +142,9 @@ export default {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-subtle': 'linear-gradient(to right bottom, rgb(249, 250, 251), rgb(243, 244, 246))',
-        'gradient-kalmunai': 'linear-gradient(to right, #13272E, #487674)',
-        'gradient-accent': 'linear-gradient(to right, #E8C69B, #CB6330)',
-        'gradient-flower': 'linear-gradient(to right, #1A2640, #5CA9AF)',
+        'gradient-kalmunai': 'linear-gradient(to right, #2F4D66, #357D88)',
+        'gradient-accent': 'linear-gradient(to right, #80BEA4, #C98633)',
+        'gradient-flower': 'linear-gradient(to right, #2F4D66, #5CA9AF)',
         'gradient-flower-accent': 'linear-gradient(to right, #5CA9AF, #DA4E5A)'
       }
     }

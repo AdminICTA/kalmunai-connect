@@ -17,14 +17,14 @@ export const Logo = ({ className, size = "md", withText = true }: LogoProps) => 
   return (
     <div className={cn("flex items-center", className)}>
       <img 
-        src="/lovable-uploads/logo.png" 
+        src="/lovable-uploads/1653f8d3-e04b-42ea-80a5-9021dda30af2.png" 
         alt="Divisional Secretariat - Kalmunai Logo"
         className={cn("object-contain", sizes[size])}
       />
       {withText && (
         <div className="ml-3">
-          <h1 className="text-lg font-medium leading-tight">Divisional Secretariat</h1>
-          <h2 className="text-sm text-muted-foreground">Kalmunai</h2>
+          <h1 className="text-lg font-medium leading-tight text-kalmunai-darkNavy">Divisional Secretariat</h1>
+          <h2 className="text-sm text-kalmunai-teal">Kalmunai</h2>
         </div>
       )}
     </div>

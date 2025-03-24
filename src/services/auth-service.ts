@@ -71,63 +71,105 @@ class AuthService {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    let mockUser;
-    
-    if (usernameOrEmail.includes("icta") || usernameOrEmail === "ICTA") {
-      mockUser = { 
+    // Check credentials
+    if (usernameOrEmail === "ICTA" && password === "admin123") {
+      const mockUser = { 
         id: "u1", 
         username: "ICTA", 
         email: "icta@dskalmunai.com", 
         role_id: "Admin",
         department_id: "ADM1"
       };
-    } else if (usernameOrEmail.includes("farhana") || usernameOrEmail === "Farhana") {
-      mockUser = { 
-        id: "u2", 
-        username: "Farhana", 
-        email: "farhana@dskalmunai.com", 
-        role_id: "Admin",
-        department_id: "ADR1"
+      localStorage.setItem("auth_token", "mock-token-admin-" + Date.now());
+      localStorage.setItem("user", JSON.stringify(mockUser));
+      toast.success('Login successful as Admin!');
+      return {
+        success: true,
+        token: "mock-token-admin",
+        user: mockUser,
+        message: "Admin login successful"
       };
-    } else if (usernameOrEmail.includes("staff") || usernameOrEmail === "Staff") {
-      mockUser = { 
+    } 
+    else if (usernameOrEmail === "Staff" && password === "staff123") {
+      const mockUser = { 
         id: "u3", 
         username: "Staff", 
         email: "staff@dskalmunai.com", 
         role_id: "Staff",
         department_id: "LND1"
       };
-    } else if (usernameOrEmail.includes("marliya") || usernameOrEmail === "Marliya") {
-      mockUser = { 
-        id: "u4", 
-        username: "Marliya", 
-        email: "marliya@dskalmunai.com", 
-        role_id: "User",
-        department_id: "ACC1"
+      localStorage.setItem("auth_token", "mock-token-staff-" + Date.now());
+      localStorage.setItem("user", JSON.stringify(mockUser));
+      toast.success('Login successful as Staff!');
+      return {
+        success: true,
+        token: "mock-token-staff",
+        user: mockUser,
+        message: "Staff login successful"
       };
-    } else {
-      mockUser = { 
+    }
+    else if (usernameOrEmail === "User" && password === "user123") {
+      const mockUser = { 
         id: "u5", 
         username: "Maya", 
         email: "maya@dskalmunai.com", 
         role_id: "User",
         department_id: "NIC1"
       };
+      localStorage.setItem("auth_token", "mock-token-user-" + Date.now());
+      localStorage.setItem("user", JSON.stringify(mockUser));
+      toast.success('Login successful as User!');
+      return {
+        success: true,
+        token: "mock-token-user",
+        user: mockUser,
+        message: "User login successful"
+      };
     }
-    
-    // Store auth data in localStorage
-    const mockToken = "mock-token-" + Date.now();
-    localStorage.setItem("auth_token", mockToken);
-    localStorage.setItem("user", JSON.stringify(mockUser));
-    
-    toast.success('Login successful!');
-    
-    return {
-      success: true,
-      token: mockToken,
-      user: mockUser,
-      message: "Mock login successful"
-    };
+    else {
+      // For demo purposes, still allow login with any credentials
+      let mockUser;
+      
+      if (usernameOrEmail.toLowerCase().includes("admin")) {
+        mockUser = { 
+          id: "u1", 
+          username: "ICTA", 
+          email: "icta@dskalmunai.com", 
+          role_id: "Admin",
+          department_id: "ADM1"
+        };
+      } else if (usernameOrEmail.toLowerCase().includes("staff")) {
+        mockUser = { 
+          id: "u3", 
+          username: "Staff", 
+          email: "staff@dskalmunai.com", 
+          role_id: "Staff",
+          department_id: "LND1"
+        };
+      } else {
+        mockUser = { 
+          id: "u5", 
+          username: "Maya", 
+          email: "maya@dskalmunai.com", 
+          role_id: "User",
+          department_id: "NIC1"
+        };
+      }
+      
+      // Store auth data in localStorage
+      const mockToken = "mock-token-" + Date.now();
+      localStorage.setItem("auth_token", mockToken);
+      localStorage.setItem("user", JSON.stringify(mockUser));
+      
+      toast.warning('Using default credentials - please use provided demo credentials for specific roles');
+      
+      return {
+        success: true,
+        token: mockToken,
+        user: mockUser,
+        message: "Mock login successful"
+      };
+    }
   }
 
   /**

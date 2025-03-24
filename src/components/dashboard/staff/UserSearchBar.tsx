@@ -15,7 +15,7 @@ const UserSearchBar = ({ searchTerm, setSearchTerm }: UserSearchBarProps) => {
         <Input
           type="search"
           placeholder="Search by name, email, QR code or phone..."
-          className="pl-8"
+          className="pl-8 border-kalmunai-teal/20 focus:border-kalmunai-teal focus:ring-kalmunai-teal/30"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
