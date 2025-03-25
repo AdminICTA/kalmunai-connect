@@ -49,12 +49,8 @@ if (!isset($data['id'])) {
     exit();
 }
 
-// Database connection
-$dbHost = '162.214.204.205';
-$dbPort = '3306';
-$dbUser = 'dskalmun_Admin';
-$dbPass = 'Itadmin@1993';
-$dbName = 'dskalmun_database';
+// Include database configuration
+require_once __DIR__ . '/../config/database.php';
 
 // Connect to the database
 $conn = new mysqli($dbHost, $dbUser, $dbPass, $dbName, $dbPort);
@@ -105,9 +101,8 @@ if (isset($data['current_password']) && isset($data['new_password'])) {
     
     $user = $result->fetch_assoc();
     
-    // Simple password verification (for this example)
-    // In production, use password_verify for hashed passwords
-    if ($user['password'] !== $currentPassword) {
+    // Verify password using secure hashing
+    if (!password_verify($currentPassword, $user['password'])) {
         echo json_encode([
             'success' => false,
             'message' => 'Current password is incorrect'
@@ -115,7 +110,9 @@ if (isset($data['current_password']) && isset($data['new_password'])) {
         exit();
     }
     
-    $updateFields[] = "password = '$newPassword'";
+    // Hash new password before updating
+    $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+    $updateFields[] = "password = '$hashedNewPassword'";
 }
 
 // If no fields to update, return success

@@ -69,6 +69,12 @@ export function RegisterModal({ open, onOpenChange }: RegisterModalProps) {
       );
       
       if (response.success) {
+        // Emit an event to notify parent components about the new user
+        const newUserEvent = new CustomEvent('userCreated', { 
+          detail: response.data 
+        });
+        window.dispatchEvent(newUserEvent);
+
         toast({
           title: "Registration Successful",
           description: "Your application has been submitted for processing.",

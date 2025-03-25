@@ -48,11 +48,8 @@ if (!isset($data['sender_id']) || !isset($data['receiver_id']) || !isset($data['
 }
 
 // Database connection
-$dbHost = '162.214.204.205';
-$dbPort = '3306';
-$dbUser = 'dskalmun_Admin';
-$dbPass = 'Itadmin@1993';
-$dbName = 'dskalmun_database';
+// Include database configuration
+require_once __DIR__ . '/../config/database.php';
 
 // Connect to the database
 $conn = new mysqli($dbHost, $dbUser, $dbPass, $dbName, $dbPort);
