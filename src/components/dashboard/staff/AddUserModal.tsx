@@ -6,11 +6,22 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod";
 
+interface User {
+  id: string;
+  qr_code: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  nic: string;
+  role?: string;
+}
+
 interface AddUserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  form: UseFormReturn<any>;
-  onSubmit: (data: any) => void;
+  form: UseFormReturn<Omit<User, 'id' | 'qr_code' | 'role'>>;
+  onSubmit: (data: Omit<User, 'id' | 'qr_code' | 'role'>) => void;
 }
 
 const AddUserModal = ({ open, onOpenChange, form, onSubmit }: AddUserModalProps) => {

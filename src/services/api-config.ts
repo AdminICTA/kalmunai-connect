@@ -1,6 +1,8 @@
 
 // API Base URL
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+export const API_BASE_URL = import.meta.env.PROD 
+  ? 'https://dskalmunai.lk/api'  // Production URL
+  : 'http://localhost/dskalmunai/api';  // Development URL
 
 /**
  * API Endpoints Configuration

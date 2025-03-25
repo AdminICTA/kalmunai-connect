@@ -5,11 +5,11 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Content-Type: application/json');
 
 // Database configuration
-$dbHost = '162.214.204.205';    // Database host
+$dbHost = 'localhost';         // Database host
 $dbPort = '3306';               // Database port
 $dbUser = 'dskalmun_Admin';     // Database username
 $dbPass = 'Itadmin@1993';       // Database password
-$dbName = 'dskalmun_RecApp';  // Database name
+$dbName = 'dskalmun_RecApp';    // Database name
 
 // Connection creation
 $conn = new mysqli($dbHost, $dbUser, $dbPass, $dbName, $dbPort);

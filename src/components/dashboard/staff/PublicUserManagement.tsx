@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { userService } from "@/services/user-service";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -14,6 +15,28 @@ import UsersTable from "./UsersTable";
 import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal";
 import IdCardModal from "./IdCardModal";
+
+// Define interfaces for user and notification types
+interface User {
+  id: string;
+  qr_code: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  nic: string;
+  role?: string;
+}
+
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  user: User;
+  isRead: boolean;
+}
 
 // Define the public user schema
 const publicUserFormSchema = z.object({
@@ -30,9 +53,9 @@ const PublicUserManagement = () => {
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
   const [isViewIdCardModalOpen, setIsViewIdCardModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const navigate = useNavigate();
 
   // Form for adding a new public user
@@ -103,27 +126,53 @@ const PublicUserManagement = () => {
   }, []);
 
   // Function to handle adding a new public user
-  const onAddPublicUser = (data: PublicUserFormData) => {
-    console.log("Adding public user:", data);
-    // Generate a unique QR code for the user
-    const qrCode = `DSPUB-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    // Here you would normally call an API to create the user
-    toast.success("Public user created successfully");
-    setIsAddUserModalOpen(false);
-    publicUserForm.reset();
+  const onAddPublicUser = async (data: PublicUserFormData) => {
+    try {
+      const qrCode = `DSPUB-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const newUser = await userService.createUser<User>({
+        ...data,
+        qr_code: qrCode,
+        role: 'public'
+      });
+      
+      if (newUser) {
+        setIsAddUserModalOpen(false);
+        publicUserForm.reset();
+        // Refresh the users list immediately
+        fetchPublicUsers();
+        toast.success('User created successfully');
+      }
+    } catch (error) {
+      console.error('Error creating user:', error);
+      toast.error('Failed to create user');
+    }
   };
 
   // Function to handle editing a public user
-  const onEditPublicUser = (data: PublicUserFormData) => {
-    console.log("Editing public user:", data);
-    // Here you would normally call an API to update the user
-    toast.success("Public user updated successfully");
-    setIsEditUserModalOpen(false);
-    editUserForm.reset();
+  const onEditPublicUser = async (data: PublicUserFormData) => {
+    try {
+      if (!selectedUser?.id) {
+        toast.error('No user selected for editing');
+        return;
+      }
+
+      const updatedUser = await userService.updateUser(selectedUser.id, data);
+      
+      if (updatedUser) {
+        setIsEditUserModalOpen(false);
+        editUserForm.reset();
+        // Refresh the users list immediately
+        fetchPublicUsers();
+        toast.success('User updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error('Failed to update user');
+    }
   };
 
   // Function to open edit modal with user data
-  const handleEditUser = (user: any) => {
+  const handleEditUser = (user: User) => {
     setSelectedUser(user);
     editUserForm.reset({
       full_name: user.full_name,
@@ -136,13 +185,13 @@ const PublicUserManagement = () => {
   };
 
   // Function to view the ID card
-  const handleViewIdCard = (user: any) => {
+  const handleViewIdCard = (user: User) => {
     setSelectedUser(user);
     setIsViewIdCardModalOpen(true);
   };
 
   // Function to mark notification as read and create ID card
-  const handleNotificationAction = (notification: any) => {
+  const handleNotificationAction = (notification: Notification) => {
     if (notification.type === "new_registration") {
       // Mark as read (would normally update in database)
       setNotifications(prev => 
@@ -165,12 +214,37 @@ const PublicUserManagement = () => {
     navigate("/dashboard/employee");
   };
 
-  // Mock public users data for demonstration
-  const publicUsers = [
-    { id: "p1", qr_code: "DSPUB-12345", full_name: "Fathima Rizna", email: "fathima@example.com", phone: "0771234567", address: "123 Main St, Kalmunai", nic: "901234567V" },
-    { id: "p2", qr_code: "DSPUB-23456", full_name: "Mohamed Rifan", email: "mohamed@example.com", phone: "0772345678", address: "456 Oak St, Kalmunai", nic: "912345678V" },
-    { id: "p3", qr_code: "DSPUB-34567", full_name: "Suhail Ahmed", email: "suhail@example.com", phone: "0773456789", address: "789 Pine St, Kalmunai", nic: "923456789V" }
-  ];
+  const [publicUsers, setPublicUsers] = useState<User[]>([]);
+
+  // Function to fetch public users
+  const fetchPublicUsers = async () => {
+    try {
+      const users = await userService.getAllUsers();
+      setPublicUsers(users.filter(user => user.role === 'public'));
+    } catch (error) {
+      console.error('Error fetching public users:', error);
+      toast.error('Failed to fetch public users');
+    }
+  };
+
+  useEffect(() => {
+    fetchPublicUsers();
+  }, []);
+
+  // Function to handle deleting a user
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const success = await userService.deleteUser(userId);
+      if (success) {
+        // Refresh the users list immediately
+        fetchPublicUsers();
+        toast.success('User deleted successfully');
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error('Failed to delete user');
+    }
+  };
 
   // Filter users based on search term
   const filteredUsers = publicUsers.filter(user => 

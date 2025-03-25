@@ -17,9 +17,10 @@ interface UsersTableProps {
   users: User[];
   onEditUser: (user: User) => void;
   onViewIdCard: (user: User) => void;
+  onDeleteUser: (userId: string) => void;
 }
 
-const UsersTable = ({ users, onEditUser, onViewIdCard }: UsersTableProps) => {
+const UsersTable = ({ users, onEditUser, onViewIdCard, onDeleteUser }: UsersTableProps) => {
   const navigate = useNavigate();
   
   return (
@@ -67,6 +68,14 @@ const UsersTable = ({ users, onEditUser, onViewIdCard }: UsersTableProps) => {
                   >
                     <Eye className="h-3 w-3 mr-1" />
                     View
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onDeleteUser(user.id)}
+                    className="bg-red-50 border-red-200 text-red-600 hover:bg-red-100"
+                  >
+                    Delete
                   </Button>
                 </div>
               </td>

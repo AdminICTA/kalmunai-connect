@@ -9,35 +9,98 @@ class ApiService {
   /**
    * Make a GET request to the API
    */
-  async get<T>(url: string, params?: Record<string, string>): Promise<T> {
-    try {
-      const token = localStorage.getItem('auth_token');
-      
-      let queryUrl = url;
-      if (params) {
-        const queryParams = new URLSearchParams(params);
-        queryUrl = `${url}?${queryParams.toString()}`;
-      }
-      
-      const response = await fetch(queryUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` }),
-        },
-      });
+  /**
+   * Make a GET request to the API with enhanced error handling and timeout
+   * @param url The endpoint URL
+   * @param params Optional query parameters
+   * @param options Optional request configuration
+   * @returns Promise with the response data
+   */
+  async get<T>(
+    url: string,
+    params?: Record<string, string>,
+    options: {
+      timeout?: number;
+      validateResponse?: (data: any) => boolean;
+      retries?: number;
+    } = {}
+  ): Promise<T> {
+    const {
+      timeout = 30000,
+      validateResponse = () => true,
+      retries = 1
+    } = options;
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error occurred' }));
-        throw new Error(errorData.message || `API error: ${response.status}`);
-      }
+    let attempt = 0;
+    while (attempt < retries) {
+      try {
+        const token = localStorage.getItem('auth_token');
+        
+        let queryUrl = url;
+        if (params) {
+          const queryParams = new URLSearchParams(params);
+          queryUrl = `${url}?${queryParams.toString()}`;
+        }
 
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      toast.error(error instanceof Error ? error.message : 'Request failed');
-      throw error;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        
+        const response = await fetch(queryUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` }),
+          },
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ 
+            message: `HTTP error! status: ${response.status}`,
+            status: response.status,
+            statusText: response.statusText
+          }));
+          throw new Error(errorData.message || `API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (!validateResponse(data)) {
+          throw new Error('Response validation failed');
+        }
+
+        return data;
+      } catch (error) {
+        attempt++;
+        
+        if (error instanceof Error) {
+          if (error.name === 'AbortError') {
+            if (attempt === retries) {
+              toast.error(`Request timeout after ${timeout}ms`);
+              throw new Error(`Request timeout after ${timeout}ms`);
+            }
+            continue;
+          }
+          
+          if (attempt === retries) {
+            console.error('API request failed:', error);
+            toast.error(error.message || 'Request failed');
+            throw error;
+          }
+        } else {
+          if (attempt === retries) {
+            console.error('API request failed:', error);
+            toast.error('An unexpected error occurred');
+            throw new Error('An unexpected error occurred');
+          }
+        }
+      }
     }
+
+    throw new Error('Maximum retry attempts reached');
   }
 
   /**

@@ -1,10 +1,10 @@
 <?php
 // Database configuration
-$dbHost = '162.214.204.205';
+$dbHost = 'localhost';
 $dbPort = '3306';
-$dbUser = 'dskalmunai_admin';
-$dbPass = 'ITAdmin@1993';
-$dbName = 'dskalmunai_recapp';
+$dbUser = 'dskalmun_Admin';
+$dbPass = 'Itadmin@1993';
+$dbName = 'dskalmun_RecApp';
 
 // Create database connection
 function getDbConnection() {

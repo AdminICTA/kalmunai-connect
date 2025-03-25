@@ -5,11 +5,22 @@ import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
 
+interface User {
+  id: string;
+  qr_code: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  nic: string;
+  role?: string;
+}
+
 interface EditUserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  form: UseFormReturn<any>;
-  onSubmit: (data: any) => void;
+  form: UseFormReturn<Omit<User, 'id' | 'qr_code' | 'role'>>;
+  onSubmit: (data: Omit<User, 'id' | 'qr_code' | 'role'>) => void;
 }
 
 const EditUserModal = ({ open, onOpenChange, form, onSubmit }: EditUserModalProps) => {
