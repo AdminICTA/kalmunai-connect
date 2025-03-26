@@ -5,16 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Printer, Download } from "lucide-react";
 import { toast } from "sonner";
 import { IdCard } from "@/components/ui/id-card";
-
-interface User {
-  id: string;
-  qr_code: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  address: string;
-  nic: string;
-}
+import { User } from "@/types/user";
 
 interface IdCardModalProps {
   open: boolean;

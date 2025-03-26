@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
+import { User, PublicUserFormData } from "@/types/user";
 
 // Import the refactored components
 import UserNotifications from "./UserNotifications";
@@ -16,18 +17,7 @@ import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal";
 import IdCardModal from "./IdCardModal";
 
-// Define interfaces for user and notification types
-interface User {
-  id: string;
-  qr_code: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  address: string;
-  nic: string;
-  role?: string;
-}
-
+// Define interfaces for notification types
 interface Notification {
   id: string;
   type: string;
@@ -47,8 +37,6 @@ const publicUserFormSchema = z.object({
   nic: z.string().min(10, "NIC must be at least 10 characters"),
 });
 
-type PublicUserFormData = z.infer<typeof publicUserFormSchema>;
-
 const PublicUserManagement = () => {
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
@@ -56,6 +44,7 @@ const PublicUserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [publicUsers, setPublicUsers] = useState<User[]>([]);
   const navigate = useNavigate();
 
   // Form for adding a new public user
@@ -129,7 +118,7 @@ const PublicUserManagement = () => {
   const onAddPublicUser = async (data: PublicUserFormData) => {
     try {
       const qrCode = `DSPUB-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      const newUser = await userService.createUser<User>({
+      const newUser = await userService.createUser({
         ...data,
         qr_code: qrCode,
         role: 'public'
@@ -214,13 +203,14 @@ const PublicUserManagement = () => {
     navigate("/dashboard/employee");
   };
 
-  const [publicUsers, setPublicUsers] = useState<User[]>([]);
-
   // Function to fetch public users
   const fetchPublicUsers = async () => {
     try {
       const users = await userService.getAllUsers();
-      setPublicUsers(users.filter(user => user.role === 'public'));
+      // Need to make sure we filter to only public users that match our User interface
+      const filteredUsers = users.filter(user => user.role === 'public' && 
+        'full_name' in user && 'email' in user && 'qr_code' in user);
+      setPublicUsers(filteredUsers as User[]);
     } catch (error) {
       console.error('Error fetching public users:', error);
       toast.error('Failed to fetch public users');
@@ -301,7 +291,8 @@ const PublicUserManagement = () => {
       <UsersTable 
         users={filteredUsers} 
         onEditUser={handleEditUser} 
-        onViewIdCard={handleViewIdCard} 
+        onViewIdCard={handleViewIdCard}
+        onDeleteUser={handleDeleteUser}
       />
 
       {/* Add User Modal */}

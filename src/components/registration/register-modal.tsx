@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/services/api-service";
 import { ENDPOINTS } from "@/services/api-config";
+import { RegistrationResponse } from "@/types/user";
 
 import { ModalForm } from "@/components/ui/modal-form";
 import {
@@ -33,11 +34,6 @@ type RegisterFormValues = z.infer<typeof registerFormSchema>;
 interface RegisterModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-interface RegistrationResponse {
-  success: boolean;
-  message?: string;
 }
 
 export function RegisterModal({ open, onOpenChange }: RegisterModalProps) {
@@ -71,7 +67,7 @@ export function RegisterModal({ open, onOpenChange }: RegisterModalProps) {
       if (response.success) {
         // Emit an event to notify parent components about the new user
         const newUserEvent = new CustomEvent('userCreated', { 
-          detail: response.data 
+          detail: response.user // Changed from response.data to response.user
         });
         window.dispatchEvent(newUserEvent);
 

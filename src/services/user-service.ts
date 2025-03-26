@@ -2,20 +2,7 @@
 import { apiService } from './api-service';
 import { ENDPOINTS } from './api-config';
 import { toast } from 'sonner';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  // Add other user fields as needed
-}
-
-interface UserResponse {
-  success: boolean;
-  data?: User | User[];
-  message?: string;
-}
+import { User, UserResponse } from '@/types/user';
 
 /**
  * Service for user management API calls
@@ -64,7 +51,7 @@ class UserService {
   /**
    * Create a new user
    */
-  async createUser(userData: Omit<User, 'id'>): Promise<User | null> {
+  async createUser(userData: Omit<User, 'id' | 'qr_code'>): Promise<User | null> {
     try {
       const response = await apiService.post<UserResponse>(ENDPOINTS.USERS.CREATE, userData);
       

@@ -2,16 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-interface User {
-  id: string;
-  qr_code: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  address: string;
-  nic: string;
-}
+import { User } from "@/types/user";
 
 interface UsersTableProps {
   users: User[];

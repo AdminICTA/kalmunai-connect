@@ -32,5 +32,9 @@ export const ENDPOINTS = {
     VERIFY: '/sms/verify.php',
     NOTIFY: '/sms/notify.php'
   },
+  SMS_LENZ: {
+    SEND: 'https://smslenz.lk/api/send-sms',
+    BULK_SEND: 'https://smslenz.lk/api/send-bulk'
+  },
   // Add other endpoints as needed
 };

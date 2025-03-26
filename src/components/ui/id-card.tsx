@@ -1,6 +1,7 @@
 
 import { UserSearch } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { User } from "@/types/user";
 
 // Define color constants for the ID card
 const colors = {
@@ -9,18 +10,8 @@ const colors = {
   teal: "#319795",
 };
 
-interface IdCardUser {
-  id: string;
-  qr_code: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  address: string;
-  nic: string;
-}
-
 interface IdCardProps {
-  user: IdCardUser;
+  user: User;
   className?: string;
 }
 
