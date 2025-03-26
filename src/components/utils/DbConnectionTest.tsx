@@ -118,7 +118,7 @@ export function DbConnectionTest() {
         <Button 
           onClick={testConnection} 
           disabled={isLoading}
-          variant={result?.success ? "default" : "destructive"}
+          variant={result?.success ? "default" : "outline"}
           className="w-full"
         >
           {isLoading ? (

@@ -1,5 +1,6 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import * as React from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { authService } from "@/services/auth-service";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
