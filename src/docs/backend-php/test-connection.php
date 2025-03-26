@@ -1,3 +1,4 @@
+
 <?php
 // Enable CORS for development
 header("Access-Control-Allow-Origin: *");
@@ -35,8 +36,8 @@ if (empty($authHeader) || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches))
 // In a real app, validate the token properly
 $token = $matches[1];
 
-// Database connection parameters
-$dbHost = '162.214.204.205';
+// Database connection parameters - ensure these match your cPanel credentials
+$dbHost = 'localhost'; // Use 'localhost' for cPanel
 $dbPort = '3306';
 $dbUser = 'dskalmun_Admin';
 $dbPass = 'Itadmin@1993';

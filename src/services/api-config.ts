@@ -1,7 +1,6 @@
-
 // API Base URL
 export const API_BASE_URL = import.meta.env.PROD 
-  ? 'https://dskalmunai.lk/api'  // Production URL
+  ? 'https://dskalmunai.lk/api'  // Production URL - ensure this points to your cPanel
   : 'http://localhost/dskalmunai/api';  // Development URL
 
 /**
