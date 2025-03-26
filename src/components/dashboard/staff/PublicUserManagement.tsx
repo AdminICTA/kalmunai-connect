@@ -117,12 +117,14 @@ const PublicUserManagement = () => {
   // Function to handle adding a new public user
   const onAddPublicUser = async (data: PublicUserFormData) => {
     try {
+      // Generate QR code separately since it's not part of the form data
       const qrCode = `DSPUB-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      
+      // Create user with qr_code as a separate parameter
       const newUser = await userService.createUser({
         ...data,
-        qr_code: qrCode,
         role: 'public'
-      });
+      }, qrCode); // Pass qr_code as a separate parameter
       
       if (newUser) {
         setIsAddUserModalOpen(false);

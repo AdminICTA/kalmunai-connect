@@ -51,9 +51,15 @@ class UserService {
   /**
    * Create a new user
    */
-  async createUser(userData: Omit<User, 'id' | 'qr_code'>): Promise<User | null> {
+  async createUser(userData: Omit<User, 'id' | 'qr_code'>, qrCode?: string): Promise<User | null> {
     try {
-      const response = await apiService.post<UserResponse>(ENDPOINTS.USERS.CREATE, userData);
+      // Add qr_code to the userData if provided
+      const dataToSend = {
+        ...userData,
+        qr_code: qrCode || `DSPUB-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+      };
+      
+      const response = await apiService.post<UserResponse>(ENDPOINTS.USERS.CREATE, dataToSend);
       
       if (!response.success || !response.data) {
         toast.error(response.message || 'Failed to create user');
