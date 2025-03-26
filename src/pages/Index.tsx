@@ -16,7 +16,8 @@ import {
   Map,
   Clock,
   ArrowDown,
-  ExternalLink
+  ExternalLink,
+  LogIn
 } from "lucide-react";
 
 const Index = () => {
@@ -71,7 +72,7 @@ const Index = () => {
 
   return (
     <MainLayout>
-      {/* Hero Section */}
+      {/* Hero Section with Sign In Button */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-sidebar/40 to-sidebar-primary/30 z-0"></div>
         <div className="container relative z-10 py-20 md:py-32">
@@ -105,7 +106,7 @@ const Index = () => {
                       className="bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
                     >
                       Sign In
-                      <ChevronRight className="ml-2 h-4 w-4" />
+                      <LogIn className="ml-2 h-4 w-4" />
                     </Button>
                     <Button 
                       size="lg" 
@@ -130,7 +131,7 @@ const Index = () => {
               <div className="relative w-[280px] h-[280px] md:w-[380px] md:h-[380px]">
                 <div className="absolute inset-0 rounded-full bg-gradient-radial from-sidebar-accent/50 to-white/90 shadow-glass animate-pulse"></div>
                 <img 
-                  src="https://placehold.co/400x400/png?text=Logo" 
+                  src="https://www.dskalmunai.gov.lk/wp-content/uploads/2022/06/cropped-LOGO_d.png" 
                   alt="Divisional Secretariat - Kalmunai" 
                   className="absolute inset-0 m-auto w-3/4 h-3/4 object-contain"
                 />
@@ -312,7 +313,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section with Sign In Button */}
       <section className="py-16">
         <div className="container">
           <div className="max-w-4xl mx-auto bg-gradient-to-br from-sidebar to-sidebar-primary rounded-xl overflow-hidden shadow-xl">
@@ -328,7 +329,7 @@ const Index = () => {
                   className="bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/90"
                 >
                   Sign In
-                  <UserCheck className="ml-2 h-4 w-4" />
+                  <LogIn className="ml-2 h-4 w-4" />
                 </Button>
                 <Button 
                   variant="outline"

@@ -1,8 +1,8 @@
 
 {
   "name": "Kalmunai Connect",
-  "short_name": "Kalmunai",
-  "description": "Official portal for Kalmunai Divisional Secretariat services",
+  "short_name": "KalmunaiApp",
+  "description": "Official Portal for Kalmunai Divisional Secretariat",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -20,5 +20,39 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["government", "utilities", "productivity"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "orientation": "portrait",
+  "shortcuts": [
+    {
+      "name": "Login",
+      "short_name": "Login",
+      "description": "Sign in to your account",
+      "url": "/login",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Services",
+      "short_name": "Services",
+      "description": "View available government services",
+      "url": "/#services",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/home.png",
+      "sizes": "1280x720",
+      "type": "image/png"
+    },
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }

@@ -1,7 +1,8 @@
+
 <?php
 // Database configuration
-$dbHost = 'localhost';
-$dbPort = '3306';
+$dbHost = 'localhost'; // Your cPanel database host (usually localhost)
+$dbPort = '3306';     // Default MySQL port
 $dbUser = 'dskalmun_Admin';
 $dbPass = 'Itadmin@1993';
 $dbName = 'dskalmun_RecApp';
