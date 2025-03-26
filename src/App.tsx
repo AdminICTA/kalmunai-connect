@@ -17,6 +17,9 @@ import PublicDashboard from "./pages/dashboard/public";
 import PublicDetails from "./pages/PublicDetails";
 import SettingsPage from "./pages/settings";
 import NotFound from "./pages/NotFound";
+import Services from "./pages/services";
+import About from "./pages/about";
+import Contact from "./pages/contact";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,6 +75,11 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
+      
+      {/* New routes for public pages */}
+      <Route path="/services" element={<Services />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
       
       {/* Protected Dashboard Routes */}
       <Route 
@@ -142,9 +150,6 @@ const AppRoutes = () => {
       
       {/* Documentation route - will add more pages as needed */}
       <Route path="/documentation" element={<div className="container py-8">Documentation</div>} />
-      <Route path="/services" element={<div className="container py-8">Services</div>} />
-      <Route path="/about" element={<div className="container py-8">About</div>} />
-      <Route path="/contact" element={<div className="container py-8">Contact</div>} />
       <Route path="/privacy" element={<div className="container py-8">Privacy Policy</div>} />
       <Route path="/terms" element={<div className="container py-8">Terms of Service</div>} />
       

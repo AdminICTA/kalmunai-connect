@@ -36,15 +36,12 @@ if (empty($authHeader) || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches))
 // In a real app, validate the token properly
 $token = $matches[1];
 
-// Database connection parameters - ensure these match your cPanel credentials
-$dbHost = 'localhost'; // Use 'localhost' for cPanel
-$dbPort = '3306';
-$dbUser = 'dskalmun_Admin';
-$dbPass = 'Itadmin@1993';
-$dbName = 'dskalmun_RecApp';
+// Include database configuration
+require_once __DIR__ . '/../config.php';
 
 // Test database connection
 try {
+    // Use the existing connection parameters from config.php
     $conn = new mysqli($dbHost, $dbUser, $dbPass, $dbName, $dbPort);
     
     if ($conn->connect_error) {

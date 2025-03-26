@@ -1,7 +1,8 @@
+
 // API Base URL
 export const API_BASE_URL = import.meta.env.PROD 
   ? 'https://dskalmunai.lk/api'  // Production URL - ensure this points to your cPanel
-  : 'http://localhost/dskalmunai/api';  // Development URL
+  : 'https://dskalmunai.lk/api';  // Force production URL for all environments
 
 /**
  * API Endpoints Configuration
@@ -35,5 +36,8 @@ export const ENDPOINTS = {
     SEND: 'https://smslenz.lk/api/send-sms',
     BULK_SEND: 'https://smslenz.lk/api/send-bulk'
   },
-  // Add other endpoints as needed
+  // Test connection endpoint
+  TEST: {
+    CONNECTION: '/test-connection.php'
+  }
 };
