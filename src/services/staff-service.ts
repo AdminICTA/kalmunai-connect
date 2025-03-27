@@ -197,5 +197,35 @@ export const StaffService = {
       console.error('Error fetching departments with divisions:', error);
       throw error;
     }
+  },
+
+  /**
+   * Search staff by name, NIC, or designation
+   */
+  searchStaff: async (searchTerm: string): Promise<Staff[]> => {
+    try {
+      // Try to determine the search type
+      if (searchTerm.match(/^[0-9]{9}[vVxX]$/) || searchTerm.match(/^[0-9]{12}$/)) {
+        // NIC format
+        const staff = await StaffService.getStaffByNIC(searchTerm);
+        return staff ? [staff] : [];
+      } else if (['DS', 'AO', 'ADO', 'DCO', 'MSO', 'DO', 'ICTA', 'KKP'].includes(searchTerm.toUpperCase())) {
+        // Designation
+        return await StaffService.getStaffByDesignation(searchTerm as Designation);
+      } else {
+        // Assume it's a name
+        return await StaffService.getStaffByName(searchTerm);
+      }
+    } catch (error) {
+      console.error(`Error searching staff with term ${searchTerm}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get departments (for compatibility)
+   */
+  getDepartments: async (): Promise<Department[]> => {
+    return StaffService.getAllDepartmentsWithDivisions();
   }
 };

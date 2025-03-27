@@ -6,13 +6,29 @@ export interface Staff {
   address: string;
   mobileNumber: string;
   dob: string;
+  dateOfBirth?: string; // Added for compatibility
   age: number;
   appointmentDate: string;
   currentPost: string;
   grade: string;
   division: string;
   department: string;
-  family: {
+  gender?: string;
+  email?: string;
+  servicePeriod?: string;
+  employeeId?: string;
+  fatherName?: string;
+  fatherStatus?: 'living' | 'deceased';
+  motherName?: string;
+  motherStatus?: 'living' | 'deceased';
+  spouseName?: string;
+  spouseAddress?: string;
+  spouseMobile?: string;
+  children?: {
+    name: string;
+    age: number;
+  }[];
+  family?: {
     fatherName: string;
     fatherStatus: 'living' | 'deceased';
     motherName: string;

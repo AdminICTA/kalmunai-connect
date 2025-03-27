@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { StaffService } from "@/services/staff-service";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { Staff } from "@/types/staff";
 
 interface StaffSearchProps {
-  onSearchResults: (results: any[]) => void;
+  onSearchResults: (results: Staff[]) => void;
 }
 
 export const StaffSearch: React.FC<StaffSearchProps> = ({ onSearchResults }) => {
