@@ -29,12 +29,12 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = React.useState<User | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
   const navigate = useNavigate();
 
   // Check for existing session on component mount
-  useEffect(() => {
+  React.useEffect(() => {
     const checkAuth = async () => {
       try {
         setIsLoading(true);

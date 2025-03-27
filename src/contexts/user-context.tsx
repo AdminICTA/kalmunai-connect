@@ -1,5 +1,6 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import * as React from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '@/auth/auth-context';
 
 interface UserContextType {
@@ -23,7 +24,7 @@ const UserContext = createContext<UserContextType | null>(null);
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
-  const [userInfo, setUserInfo] = useState<UserInfo>({
+  const [userInfo, setUserInfo] = React.useState<UserInfo>({
     username: user?.username || '',
     email: user?.email || '',
     userId: user?.id || '',
@@ -32,7 +33,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   // Update user info when auth context changes
-  useEffect(() => {
+  React.useEffect(() => {
     if (user) {
       setUserInfo({
         username: user.username || '',
