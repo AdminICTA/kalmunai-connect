@@ -22,6 +22,20 @@ export const ENDPOINTS = {
     DELETE: '/users/delete.php',
     REGISTER: '/users/register.php',
   },
+  STAFF: {
+    GET_ALL: '/staff/get-all.php',
+    GET_ONE: (id: string) => `/staff/get.php?id=${id}`,
+    GET_BY_NIC: (nic: string) => `/staff/get-by-nic.php?nic=${nic}`,
+    GET_BY_NAME: (name: string) => `/staff/get-by-name.php?name=${name}`,
+    GET_BY_DESIGNATION: (designation: string) => `/staff/get-by-designation.php?designation=${designation}`,
+    CREATE: '/staff/create.php',
+    UPDATE: '/staff/update.php',
+    DELETE: '/staff/delete.php',
+  },
+  DEPARTMENTS: {
+    GET_ALL: '/departments/get-all.php',
+    GET_WITH_DIVISIONS: '/departments/get-with-divisions.php',
+  },
   MESSAGES: {
     GET_ALL: (userId: string) => `/messages/get-all.php?user_id=${userId}`,
     SEND: '/messages/send.php',

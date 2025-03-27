@@ -16,6 +16,8 @@ import StaffDashboard from "./pages/dashboard/staff";
 import EmployeeDashboard from "./pages/dashboard/employee";
 import PublicDashboard from "./pages/dashboard/public";
 import PublicDetails from "./pages/PublicDetails";
+import StaffDetails from "./pages/staff-details";
+import StaffPrint from "./pages/staff-print";
 import SettingsPage from "./pages/settings";
 import NotFound from "./pages/NotFound";
 import Services from "./pages/services";
@@ -125,6 +127,25 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requiredRole={["Admin", "Staff"]}>
             <EmployeeDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Staff management routes */}
+      <Route 
+        path="/staff-details" 
+        element={
+          <ProtectedRoute requiredRole={["Admin", "Staff"]}>
+            <StaffDetails />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/staff-print" 
+        element={
+          <ProtectedRoute requiredRole={["Admin", "Staff"]}>
+            <StaffPrint />
           </ProtectedRoute>
         } 
       />
