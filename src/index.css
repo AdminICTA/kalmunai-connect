@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -164,6 +165,23 @@
   .fade-up-delay-3 {
     animation: fade-up 0.8s ease-out 0.3s both;
   }
+
+  /* Hero section styles */
+  .hero-gradient {
+    background: linear-gradient(135deg, rgba(53, 125, 136, 0.1) 0%, rgba(47, 77, 102, 0.05) 100%);
+  }
+  
+  .floating-element {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .floating-element-slow {
+    animation: float 8s ease-in-out infinite;
+  }
+  
+  .floating-element-fast {
+    animation: float 4s ease-in-out infinite;
+  }
 }
 
 @keyframes fade-in {
@@ -183,5 +201,17 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
   }
 }

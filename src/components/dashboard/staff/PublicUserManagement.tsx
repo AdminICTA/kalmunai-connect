@@ -92,6 +92,11 @@ const PublicUserManagement = () => {
     setSelectedUser(user);
     setIsIdCardModalOpen(true);
   };
+  
+  const handleDeleteUser = (userId: string) => {
+    // Implement delete user functionality
+    console.log("Delete user with ID:", userId);
+  };
 
   const handleClearNotifications = () => {
     setNotifications([]);
@@ -110,8 +115,9 @@ const PublicUserManagement = () => {
 
       <UsersTable 
         users={filteredUsers} 
-        onEdit={handleEditUser}
+        onEditUser={handleEditUser}
         onViewIdCard={handleViewIdCard}
+        onDeleteUser={handleDeleteUser}
       />
 
       <AddUserModal 

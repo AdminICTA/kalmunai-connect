@@ -1,6 +1,9 @@
 
+import { User } from "@/types/user";
+
 export interface UsersTableProps {
-  users: any[];
-  onEdit: (user: any) => void;
-  onViewIdCard: (user: any) => void;
+  users: User[];
+  onEditUser: (user: User) => void;
+  onViewIdCard: (user: User) => void;
+  onDeleteUser: (userId: string) => void;
 }

@@ -1,7 +1,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { UserSearchBarProps } from "./UserSearchBar.d.ts";
+import type { UserSearchBarProps } from "./UserSearchBar.d.ts";
 
 const UserSearchBar = ({ onSearch }: UserSearchBarProps) => {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
