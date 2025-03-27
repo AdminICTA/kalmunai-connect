@@ -2,20 +2,30 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
-
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: "localhost",
     port: 8080,
-    allowedHosts: ['ac54273c-f2b4-4471-ab40-e34e98541d95.lovableproject.com'], // Add this line to allow the host
+    cors: false,
+    origin: "http://localhost:8080",
+    headers: {
+      "Access-Control-Allow-Origin": "http://localhost:8080",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "X-Frame-Options": "SAMEORIGIN",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin"
+    },
+    hmr: {
+      protocol: "ws",
+      host: "localhost",
+      clientPort: 8080
+    },
   },
   plugins: [
-    react(),
-    mode === 'development' &&
-    componentTagger(),
-  ].filter(Boolean),
+    react()
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -23,6 +33,11 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     chunkSizeWarningLimit: 1000,
+    sourcemap: false,
+    minify: 'esbuild',
+    cssMinify: true,
+    ssrManifest: true,
+    reportCompressedSize: false,
     rollupOptions: {
       output: {
         manualChunks: {

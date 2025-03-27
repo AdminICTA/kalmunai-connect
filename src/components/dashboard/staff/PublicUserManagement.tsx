@@ -117,6 +117,13 @@ const PublicUserManagement = () => {
   // Function to handle adding a new public user
   const onAddPublicUser = async (data: PublicUserFormData) => {
     try {
+      // Check if user has staff or admin role
+      const { user } = useAuth();
+      if (!user || (user.role_id !== 'Staff' && user.role_id !== 'Admin')) {
+        toast.error('Unauthorized: Only staff and admin can add users');
+        return;
+      }
+
       // Generate QR code separately since it's not part of the form data
       const qrCode = `DSPUB-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       
@@ -124,7 +131,7 @@ const PublicUserManagement = () => {
       const newUser = await userService.createUser({
         ...data,
         role: 'public'
-      }, qrCode); // Pass qr_code as a separate parameter
+      }, qrCode);
       
       if (newUser) {
         setIsAddUserModalOpen(false);
@@ -142,8 +149,42 @@ const PublicUserManagement = () => {
   // Function to handle editing a public user
   const onEditPublicUser = async (data: PublicUserFormData) => {
     try {
+      // Check if user has staff or admin role
+      const { user } = useAuth();
+      if (!user || (user.role_id !== 'Staff' && user.role_id !== 'Admin')) {
+        toast.error('Unauthorized: Only staff and admin can edit users');
+        return;
+      }
+
       if (!selectedUser?.id) {
         toast.error('No user selected for editing');
+        return;
+      }
+
+      // Validate that we're only editing public users
+      if (selectedUser.role !== 'public') {
+        toast.error('Can only edit public user accounts');
+        return;
+      }
+
+      // Validate form data before submission
+      try {
+        await publicUserFormSchema.parseAsync(data);
+      } catch (validationError) {
+        toast.error('Invalid form data. Please check your inputs.');
+        return;
+      }
+
+      // Additional validation for sensitive fields
+      if (data.nic && !/^[0-9]{9}[Vv]$/.test(data.nic)) {
+        toast.error('Invalid NIC format. Must be 9 digits followed by V or v');
+        return;
+      }
+
+      // Check if user is trying to modify protected fields
+      const protectedFields = ['qr_code', 'role'];
+      if (Object.keys(data).some(key => protectedFields.includes(key))) {
+        toast.error('Cannot modify protected fields');
         return;
       }
 
@@ -226,6 +267,20 @@ const PublicUserManagement = () => {
   // Function to handle deleting a user
   const handleDeleteUser = async (userId: string) => {
     try {
+      // Check if user has admin role
+      const { user } = useAuth();
+      if (!user || user.role_id !== 'Admin') {
+        toast.error('Unauthorized: Only admin can delete users');
+        return;
+      }
+
+      // Get user details before deletion to verify it's a public user
+      const userToDelete = await userService.getUserById(userId);
+      if (!userToDelete || userToDelete.role !== 'public') {
+        toast.error('Can only delete public user accounts');
+        return;
+      }
+
       const success = await userService.deleteUser(userId);
       if (success) {
         // Refresh the users list immediately
