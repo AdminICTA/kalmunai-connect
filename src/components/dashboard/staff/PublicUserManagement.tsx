@@ -1,14 +1,15 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "@/auth/auth-context";
-import { UserService } from '@/services/user-service';
-import { UsersTable } from './UsersTable';
-import { UserSearchBar } from './UserSearchBar';
-import { AddUserModal } from './AddUserModal';
-import { EditUserModal } from './EditUserModal';
-import { IdCardModal } from './IdCardModal';
-import { UserNotifications } from './UserNotifications';
-import { ActionButtons } from './ActionButtons';
+import { userService } from '@/services/user-service';
+import UsersTable from './UsersTable';
+import UserSearchBar from './UserSearchBar';
+import AddUserModal from './AddUserModal';
+import EditUserModal from './EditUserModal';
+import IdCardModal from './IdCardModal';
+import UserNotifications from './UserNotifications';
+import ActionButtons from './ActionButtons';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -35,9 +36,9 @@ const PublicUserManagement = () => {
     try {
       let fetchedUsers = [];
       if (selectedTab === 'active') {
-        fetchedUsers = await UserService.getAllUsers();
+        fetchedUsers = await userService.getAllUsers();
       } else if (selectedTab === 'inactive') {
-        fetchedUsers = await UserService.getInactiveUsers();
+        fetchedUsers = await userService.getInactiveUsers();
       }
       setUsers(fetchedUsers);
     } catch (error) {

@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { staffService } from "@/services/staff-service";
+import { StaffService } from "@/services/staff-service";
 import { Staff, Designation } from "@/types/staff";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ const StaffPrint = () => {
     const fetchStaff = async () => {
       setIsLoading(true);
       try {
-        const data = await staffService.getAllStaff();
+        const data = await StaffService.getAllStaff();
         setStaffList(data);
         setFilteredStaff(data);
       } catch (error) {

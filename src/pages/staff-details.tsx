@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/auth/auth-context";
@@ -8,7 +7,7 @@ import { Building, UserPlus, Search, FileText, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { staffService } from "@/services/staff-service";
+import { StaffService } from "@/services/staff-service";
 import { Department, Staff, Designation } from "@/types/staff";
 import { StaffForm } from "@/components/staff/staff-form";
 import { StaffList } from "@/components/staff/staff-list";
@@ -36,7 +35,7 @@ const StaffDetails = () => {
     const fetchDepartments = async () => {
       setIsLoading(true);
       try {
-        const departmentsData = await staffService.getAllDepartmentsWithDivisions();
+        const departmentsData = await StaffService.getAllDepartmentsWithDivisions();
         setDepartments(departmentsData);
       } catch (error) {
         console.error("Failed to fetch departments:", error);
@@ -118,7 +117,6 @@ const StaffDetails = () => {
         <StaffSearch onSelectStaff={handleStaffSelect} />
       </TabsContent>
 
-      {/* Staff Details Modal */}
       {isModalOpen && selectedStaff && (
         <StaffDetailsModal
           staff={selectedStaff}
@@ -128,12 +126,10 @@ const StaffDetails = () => {
         />
       )}
 
-      {/* Add Staff Form */}
       {isAddingStaff && (
         <StaffForm
-          isOpen={isAddingStaff}
-          onClose={handleCloseAddStaff}
           departments={departments}
+          onClose={handleCloseAddStaff}
         />
       )}
     </DashboardLayout>

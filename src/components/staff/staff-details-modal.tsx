@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useState } from "react";
 import { Staff, Department } from "@/types/staff";
@@ -15,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Printer, Edit, Trash2 } from "lucide-react";
 import { StaffForm } from "./staff-form";
-import { staffService } from "@/services/staff-service";
+import { StaffService } from "@/services/staff-service";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -56,7 +55,7 @@ export const StaffDetailsModal: React.FC<StaffDetailsModalProps> = ({
   const handleDelete = async () => {
     setIsLoading(true);
     try {
-      const success = await staffService.deleteStaff(staff.id);
+      const success = await StaffService.deleteStaff(staff.id);
       if (success) {
         toast.success("Staff member deleted successfully");
         onClose();
@@ -368,10 +367,9 @@ export const StaffDetailsModal: React.FC<StaffDetailsModalProps> = ({
 
       {isEditing && (
         <StaffForm
-          isOpen={isEditing}
-          onClose={handleCloseEdit}
           departments={departments}
           editStaff={staff}
+          onClose={handleCloseEdit}
         />
       )}
 

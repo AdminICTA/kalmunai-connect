@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { staffService } from "@/services/staff-service";
+import { StaffService } from "@/services/staff-service";
 import { Staff } from "@/types/staff";
 import { 
   Table, 
@@ -28,7 +28,7 @@ export const StaffList: React.FC<StaffListProps> = ({ onSelectStaff }) => {
     const fetchStaff = async () => {
       setIsLoading(true);
       try {
-        const data = await staffService.getAllStaff();
+        const data = await StaffService.getAllStaff();
         setStaffList(data);
       } catch (error) {
         console.error("Failed to fetch staff:", error);
