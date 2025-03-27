@@ -1,15 +1,21 @@
-
-import * as React from "react";
-import { useState } from "react";
-import { staffService } from "@/services/staff-service";
-import { Department, Staff } from "@/types/staff";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Staff, Designation } from "@/types/staff";
+import { StaffService } from "@/services/staff-service";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 import { 
   Select,
   SelectContent,
@@ -17,83 +23,75 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format } from "date-fns";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
-interface StaffFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  departments: Department[];
-  editStaff?: Staff;
-}
-
-const MAX_CHILDREN = 5;
-
-const familySchema = z.object({
+// Define validation schema for staff form
+const staffFormSchema = z.object({
+  fullName: z.string().min(3, "Full name must be at least 3 characters"),
+  nic: z.string().min(10, "NIC must be at least 10 characters"),
+  address: z.string().min(5, "Address must be at least 5 characters"),
+  mobileNumber: z.string().min(10, "Mobile number must be at least 10 digits"),
+  dob: z.string().min(1, "Date of birth is required"),
+  age: z.coerce.number().min(18, "Age must be at least 18"),
+  appointmentDate: z.string().min(1, "Appointment date is required"),
+  currentPost: z.string().min(1, "Current post is required"),
+  grade: z.string().min(1, "Grade is required"),
+  division: z.string().min(1, "Division is required"),
+  department: z.string().min(1, "Department is required"),
+  // Family details
   fatherName: z.string().min(1, "Father's name is required"),
   fatherStatus: z.enum(["living", "deceased"]),
   motherName: z.string().min(1, "Mother's name is required"),
   motherStatus: z.enum(["living", "deceased"]),
-  spouse: z.object({
-    name: z.string().optional(),
-    address: z.string().optional(),
-    mobileNumber: z.string().optional(),
-  }).optional(),
-  children: z.array(
-    z.object({
-      name: z.string().min(1, "Child name is required"),
-      age: z.number().min(0, "Age must be 0 or greater").max(100, "Age must be less than 100"),
-    })
-  ).optional(),
+  // Optional spouse details
+  spouseName: z.string().optional(),
+  spouseAddress: z.string().optional(),
+  spouseMobileNumber: z.string().optional(),
+  // Children details handled separately
 });
 
-const staffSchema = z.object({
-  fullName: z.string().min(1, "Full name is required"),
-  nic: z.string().min(1, "NIC number is required"),
-  address: z.string().min(1, "Address is required"),
-  mobileNumber: z.string().min(1, "Mobile number is required"),
-  dob: z.string().min(1, "Date of birth is required"),
-  age: z.number().min(18, "Age must be 18 or greater").max(100, "Age must be less than 100"),
-  appointmentDate: z.string().min(1, "Appointment date is required"),
-  currentPost: z.string().min(1, "Current post is required"),
-  grade: z.string().min(1, "Grade is required"),
-  department: z.string().min(1, "Department is required"),
-  division: z.string().min(1, "Division is required"),
-  family: familySchema,
-});
+// Type for form values
+type StaffFormValues = z.infer<typeof staffFormSchema>;
 
-type FormValues = z.infer<typeof staffSchema>;
+interface StaffFormProps {
+  staff?: Staff;
+  onSubmit?: (staff: Staff) => void;
+  onCancel?: () => void;
+  isLoading?: boolean;
+}
 
-export const StaffForm: React.FC<StaffFormProps> = ({
-  isOpen,
-  onClose,
-  departments,
-  editStaff,
-}) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState<string>(
-    editStaff?.department || ""
+export function StaffForm({ staff, onSubmit, onCancel, isLoading = false }: StaffFormProps) {
+  const { toast } = useToast();
+  const [children, setChildren] = useState<{ name: string; age: number }[]>(
+    staff?.family.children || []
   );
+  const [childName, setChildName] = useState("");
+  const [childAge, setChildAge] = useState<number | null>(null);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(staffSchema),
-    defaultValues: editStaff
+  // Initialize form with staff data if provided
+  const form = useForm<StaffFormValues>({
+    resolver: zodResolver(staffFormSchema),
+    defaultValues: staff
       ? {
-          ...editStaff,
-          family: {
-            ...editStaff.family,
-            children: editStaff.family.children || [],
-          },
+          fullName: staff.fullName,
+          nic: staff.nic,
+          address: staff.address,
+          mobileNumber: staff.mobileNumber,
+          dob: staff.dob,
+          age: staff.age,
+          appointmentDate: staff.appointmentDate,
+          currentPost: staff.currentPost,
+          grade: staff.grade,
+          division: staff.division,
+          department: staff.department,
+          fatherName: staff.family.fatherName,
+          fatherStatus: staff.family.fatherStatus,
+          motherName: staff.family.motherName,
+          motherStatus: staff.family.motherStatus,
+          spouseName: staff.family.spouse?.name || "",
+          spouseAddress: staff.family.spouse?.address || "",
+          spouseMobileNumber: staff.family.spouse?.mobileNumber || "",
         }
       : {
           fullName: "",
@@ -101,551 +99,500 @@ export const StaffForm: React.FC<StaffFormProps> = ({
           address: "",
           mobileNumber: "",
           dob: "",
-          age: 0,
+          age: 18,
           appointmentDate: "",
           currentPost: "",
           grade: "",
-          department: "",
           division: "",
-          family: {
-            fatherName: "",
-            fatherStatus: "living",
-            motherName: "",
-            motherStatus: "living",
-            spouse: {
-              name: "",
-              address: "",
-              mobileNumber: "",
-            },
-            children: [],
-          },
+          department: "",
+          fatherName: "",
+          fatherStatus: "living",
+          motherName: "",
+          motherStatus: "living",
+          spouseName: "",
+          spouseAddress: "",
+          spouseMobileNumber: "",
         },
   });
 
-  const watchDepartment = form.watch("department");
-
-  React.useEffect(() => {
-    if (watchDepartment !== selectedDepartment) {
-      setSelectedDepartment(watchDepartment);
-      form.setValue("division", "");
-    }
-  }, [watchDepartment, form, selectedDepartment]);
-
-  const getDivisionsByDepartment = (departmentId: string) => {
-    const department = departments.find((d) => d.id === departmentId);
-    return department?.divisions || [];
-  };
-
-  const onSubmit = async (values: FormValues) => {
-    setIsLoading(true);
-
-    try {
-      if (editStaff) {
-        await staffService.updateStaff(editStaff.id, values);
-        toast.success("Staff member updated successfully");
-      } else {
-        await staffService.createStaff(values);
-        toast.success("Staff member created successfully");
-      }
-      onClose();
-    } catch (error) {
-      console.error("Form submission error:", error);
-      toast.error("Failed to save staff data");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Function to add child
   const addChild = () => {
-    const currentChildren = form.getValues("family.children") || [];
-    if (currentChildren.length < MAX_CHILDREN) {
-      form.setValue("family.children", [
-        ...currentChildren,
-        { name: "", age: 0 },
-      ]);
+    if (childName && childAge) {
+      setChildren([...children, { name: childName, age: childAge }]);
+      setChildName("");
+      setChildAge(null);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Child name and age are required",
+      });
     }
   };
 
+  // Function to remove child
   const removeChild = (index: number) => {
-    const currentChildren = form.getValues("family.children") || [];
-    form.setValue(
-      "family.children",
-      currentChildren.filter((_, i) => i !== index)
-    );
+    setChildren(children.filter((_, i) => i !== index));
+  };
+
+  // Submit handler
+  const handleSubmit = (values: StaffFormValues) => {
+    try {
+      // Construct staff object
+      const staffData: Omit<Staff, "id"> = {
+        fullName: values.fullName,
+        nic: values.nic,
+        address: values.address,
+        mobileNumber: values.mobileNumber,
+        dob: values.dob,
+        age: values.age,
+        appointmentDate: values.appointmentDate,
+        currentPost: values.currentPost,
+        grade: values.grade,
+        division: values.division,
+        department: values.department,
+        family: {
+          fatherName: values.fatherName,
+          fatherStatus: values.fatherStatus,
+          motherName: values.motherName,
+          motherStatus: values.motherStatus,
+          children: children,
+          spouse: values.spouseName
+            ? {
+                name: values.spouseName,
+                address: values.spouseAddress || "",
+                mobileNumber: values.spouseMobileNumber || "",
+              }
+            : undefined,
+        },
+      };
+
+      // If staff exists, update it, otherwise create new
+      if (staff?.id) {
+        StaffService.updateStaff(staff.id, staffData)
+          .then((updatedStaff) => {
+            toast({
+              title: "Success",
+              description: "Staff updated successfully",
+            });
+            onSubmit?.(updatedStaff);
+          })
+          .catch((error) => {
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: `Failed to update staff: ${error.message}`,
+            });
+          });
+      } else {
+        StaffService.createStaff(staffData)
+          .then((newStaff) => {
+            toast({
+              title: "Success",
+              description: "Staff created successfully",
+            });
+            onSubmit?.(newStaff);
+          })
+          .catch((error) => {
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: `Failed to create staff: ${error.message}`,
+            });
+          });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "An error occurred",
+      });
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {editStaff ? "Edit Staff Member" : "Add New Staff Member"}
-          </DialogTitle>
-        </DialogHeader>
-
+    <Card>
+      <CardContent className="p-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Tabs defaultValue="personal">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="personal">Personal Info</TabsTrigger>
-                <TabsTrigger value="employment">Employment</TabsTrigger>
-                <TabsTrigger value="family">Family</TabsTrigger>
-              </TabsList>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Full Name */}
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter full name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <TabsContent value="personal" className="space-y-4 mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="fullName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Full name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              {/* NIC */}
+              <FormField
+                control={form.control}
+                name="nic"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>NIC</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter NIC" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-                  <FormField
-                    control={form.control}
-                    name="nic"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>NIC Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder="NIC number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            {/* Address */}
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Enter address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                  <FormField
-                    control={form.control}
-                    name="mobileNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Mobile Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Mobile number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Mobile Number */}
+              <FormField
+                control={form.control}
+                name="mobileNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mobile Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter mobile number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                  <FormField
-                    control={form.control}
-                    name="dob"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Date of Birth</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                            onChange={(e) => {
-                              field.onChange(e);
-                              // Calculate age
-                              const birthDate = new Date(e.target.value);
-                              const today = new Date();
-                              let age = today.getFullYear() - birthDate.getFullYear();
-                              const monthDiff = today.getMonth() - birthDate.getMonth();
-                              if (
-                                monthDiff < 0 ||
-                                (monthDiff === 0 && today.getDate() < birthDate.getDate())
-                              ) {
-                                age--;
-                              }
-                              form.setValue("age", age);
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              {/* Date of Birth */}
+              <FormField
+                control={form.control}
+                name="dob"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date of Birth</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-                  <FormField
-                    control={form.control}
-                    name="age"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Age</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                            value={field.value}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Address" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="employment" className="space-y-4 mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="currentPost"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Current Post</FormLabel>
-                        <FormControl>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select post" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="DS">DS</SelectItem>
-                              <SelectItem value="AO">AO</SelectItem>
-                              <SelectItem value="ADO">ADO</SelectItem>
-                              <SelectItem value="DCO">DCO</SelectItem>
-                              <SelectItem value="MSO">MSO</SelectItem>
-                              <SelectItem value="DO">DO</SelectItem>
-                              <SelectItem value="ICTA">ICTA</SelectItem>
-                              <SelectItem value="KKP">KKP</SelectItem>
-                              <SelectItem value="Other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="appointmentDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Appointment Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="grade"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Grade</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Grade" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="department"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Department</FormLabel>
-                        <FormControl>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select department" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {departments.map((department) => (
-                                <SelectItem
-                                  key={department.id}
-                                  value={department.id}
-                                >
-                                  {department.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="division"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Division</FormLabel>
-                        <FormControl>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            disabled={!selectedDepartment}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select division" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {getDivisionsByDepartment(selectedDepartment).map(
-                                (division) => (
-                                  <SelectItem
-                                    key={division.id}
-                                    value={division.id}
-                                  >
-                                    {division.name}
-                                  </SelectItem>
-                                )
-                              )}
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="family" className="space-y-6 mt-4">
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Parents Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="family.fatherName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Father's Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Father's name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="family.fatherStatus"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Status</FormLabel>
-                          <FormControl>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="living">Living</SelectItem>
-                                <SelectItem value="deceased">Deceased</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="family.motherName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Mother's Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Mother's name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="family.motherStatus"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Status</FormLabel>
-                          <FormControl>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="living">Living</SelectItem>
-                                <SelectItem value="deceased">Deceased</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Spouse Information (Optional)</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="family.spouse.name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Spouse Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Spouse name" {...field} value={field.value || ""} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="family.spouse.mobileNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Mobile Number</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Mobile number" {...field} value={field.value || ""} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="family.spouse.address"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Address</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Address" {...field} value={field.value || ""} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-medium">Children (Optional)</h3>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addChild}
-                      disabled={(form.getValues("family.children") || []).length >= MAX_CHILDREN}
-                    >
-                      Add Child
-                    </Button>
-                  </div>
-
-                  {(form.getValues("family.children") || []).map((_, index) => (
-                    <div 
-                      key={index} 
-                      className="grid grid-cols-2 gap-4 p-4 border rounded-md mb-4"
-                    >
-                      <FormField
-                        control={form.control}
-                        name={`family.children.${index}.name`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Child name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Age */}
+              <FormField
+                control={form.control}
+                name="age"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Age</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Enter age"
+                        {...field}
                       />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                      <div className="flex items-end gap-2">
-                        <FormField
-                          control={form.control}
-                          name={`family.children.${index}.age`}
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel>Age</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  {...field}
-                                  onChange={(e) => field.onChange(Number(e.target.value))}
-                                  value={field.value}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="mb-[2px]"
-                          onClick={() => removeChild(index)}
-                        >
-                          X
-                        </Button>
-                      </div>
-                    </div>
+              {/* Appointment Date */}
+              <FormField
+                control={form.control}
+                name="appointmentDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Appointment Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Current Post */}
+              <FormField
+                control={form.control}
+                name="currentPost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current Post</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter current post" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Grade */}
+              <FormField
+                control={form.control}
+                name="grade"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Grade</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter grade" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Division */}
+              <FormField
+                control={form.control}
+                name="division"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Division</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter division" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Department */}
+              <FormField
+                control={form.control}
+                name="department"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Department</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter department" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Family Details */}
+            <h4 className="text-lg font-semibold mt-4">Family Details</h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Father's Name */}
+              <FormField
+                control={form.control}
+                name="fatherName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Father's Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter father's name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Father's Status */}
+              <FormField
+                control={form.control}
+                name="fatherStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Father's Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="living">Living</SelectItem>
+                        <SelectItem value="deceased">Deceased</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Mother's Name */}
+              <FormField
+                control={form.control}
+                name="motherName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mother's Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter mother's name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Mother's Status */}
+              <FormField
+                control={form.control}
+                name="motherStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mother's Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="living">Living</SelectItem>
+                        <SelectItem value="deceased">Deceased</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Spouse Details */}
+            <h4 className="text-lg font-semibold mt-4">Spouse Details (Optional)</h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Spouse's Name */}
+              <FormField
+                control={form.control}
+                name="spouseName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Spouse's Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter spouse's name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Spouse's Mobile Number */}
+              <FormField
+                control={form.control}
+                name="spouseMobileNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Spouse's Mobile Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter spouse's mobile number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Spouse's Address */}
+            <FormField
+              control={form.control}
+              name="spouseAddress"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Spouse's Address</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Enter spouse's address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Children Details */}
+            <h4 className="text-lg font-semibold mt-4">Children Details</h4>
+
+            {/* Add Child Form */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <FormLabel>Child's Name</FormLabel>
+                <Input
+                  type="text"
+                  placeholder="Enter child's name"
+                  value={childName}
+                  onChange={(e) => setChildName(e.target.value)}
+                />
+              </div>
+              <div>
+                <FormLabel>Child's Age</FormLabel>
+                <Input
+                  type="number"
+                  placeholder="Enter child's age"
+                  value={childAge !== null ? childAge.toString() : ""}
+                  onChange={(e) =>
+                    setChildAge(e.target.value ? parseInt(e.target.value) : null)
+                  }
+                />
+              </div>
+            </div>
+            <Button type="button" onClick={addChild}>
+              Add Child
+            </Button>
+
+            {/* Display Children */}
+            {children.length > 0 && (
+              <div className="mt-4">
+                <h5 className="text-md font-semibold">List of Children</h5>
+                <ul>
+                  {children.map((child, index) => (
+                    <li key={index} className="flex items-center justify-between py-2 border-b">
+                      <span>{child.name} - {child.age} years</span>
+                      <Button type="button" variant="destructive" size="sm" onClick={() => removeChild(index)}>
+                        Remove
+                      </Button>
+                    </li>
                   ))}
-                </div>
-              </TabsContent>
-            </Tabs>
+                </ul>
+              </div>
+            )}
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
+            {/* Submit and Cancel Buttons */}
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="ghost" onClick={onCancel} type="button">
                 Cancel
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : editStaff ? "Update" : "Save"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Please wait
+                  </>
+                ) : (
+                  "Submit"
+                )}
               </Button>
             </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </CardContent>
+    </Card>
   );
-};
+}

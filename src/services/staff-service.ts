@@ -1,200 +1,201 @@
 
-import { apiService } from './api-service';
-import { ENDPOINTS } from './api-config';
-import { toast } from 'sonner';
-import { Staff, StaffResponse, Department } from '@/types/staff';
+import { API_BASE_URL, ENDPOINTS } from './api-config';
+import { Staff, Department, StaffResponse, Designation } from '@/types/staff';
 
 /**
- * Service for staff management API calls
+ * Staff Service
+ * Handles all staff-related API calls
  */
-class StaffService {
+export const StaffService = {
   /**
    * Get all staff members
    */
-  async getAllStaff(): Promise<Staff[]> {
+  getAllStaff: async (): Promise<Staff[]> => {
     try {
-      const response = await apiService.get<StaffResponse>(ENDPOINTS.STAFF.GET_ALL);
+      const response = await fetch(`${API_BASE_URL}${ENDPOINTS.STAFF.GET_ALL}`);
+      const data = await response.json();
       
-      if (!response.success) {
-        toast.error(response.message || 'Failed to fetch staff');
-        return [];
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to get staff members');
       }
       
-      return Array.isArray(response.data) ? response.data : [];
+      return data.data || [];
     } catch (error) {
-      console.error('Get all staff error:', error);
-      toast.error('Failed to fetch staff');
-      return [];
+      console.error('Error fetching staff:', error);
+      throw error;
     }
-  }
-
+  },
+  
   /**
-   * Get staff by ID
+   * Get staff member by ID
    */
-  async getStaffById(id: string): Promise<Staff | null> {
+  getStaffById: async (id: string): Promise<Staff | null> => {
     try {
-      const response = await apiService.get<StaffResponse>(ENDPOINTS.STAFF.GET_ONE(id));
+      const response = await fetch(`${API_BASE_URL}${ENDPOINTS.STAFF.GET_ONE(id)}`);
+      const data = await response.json();
       
-      if (!response.success || !response.data) {
-        toast.error(response.message || 'Failed to fetch staff member');
-        return null;
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to get staff member');
       }
       
-      return response.data as Staff;
+      return data.data || null;
     } catch (error) {
-      console.error('Get staff by ID error:', error);
-      toast.error('Failed to fetch staff member');
-      return null;
+      console.error(`Error fetching staff member with ID ${id}:`, error);
+      throw error;
     }
-  }
-
+  },
+  
   /**
-   * Get staff by NIC
+   * Get staff member by NIC
    */
-  async getStaffByNIC(nic: string): Promise<Staff | null> {
+  getStaffByNIC: async (nic: string): Promise<Staff | null> => {
     try {
-      const response = await apiService.get<StaffResponse>(ENDPOINTS.STAFF.GET_BY_NIC(nic));
+      const response = await fetch(`${API_BASE_URL}${ENDPOINTS.STAFF.GET_BY_NIC(nic)}`);
+      const data = await response.json();
       
-      if (!response.success || !response.data) {
-        toast.error(response.message || 'Failed to fetch staff member');
-        return null;
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to get staff member');
       }
       
-      return response.data as Staff;
+      return data.data || null;
     } catch (error) {
-      console.error('Get staff by NIC error:', error);
-      toast.error('Failed to fetch staff member');
-      return null;
+      console.error(`Error fetching staff member with NIC ${nic}:`, error);
+      throw error;
     }
-  }
-
+  },
+  
   /**
-   * Get staff by name
+   * Get staff members by name
    */
-  async getStaffByName(name: string): Promise<Staff[]> {
+  getStaffByName: async (name: string): Promise<Staff[]> => {
     try {
-      const response = await apiService.get<StaffResponse>(ENDPOINTS.STAFF.GET_BY_NAME(name));
+      const response = await fetch(`${API_BASE_URL}${ENDPOINTS.STAFF.GET_BY_NAME(name)}`);
+      const data = await response.json();
       
-      if (!response.success) {
-        toast.error(response.message || 'Failed to fetch staff');
-        return [];
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to get staff members');
       }
       
-      return Array.isArray(response.data) ? response.data : [];
+      return Array.isArray(data.data) ? data.data : [data.data].filter(Boolean);
     } catch (error) {
-      console.error('Get staff by name error:', error);
-      toast.error('Failed to fetch staff');
-      return [];
+      console.error(`Error fetching staff members with name ${name}:`, error);
+      throw error;
     }
-  }
-
+  },
+  
   /**
-   * Get staff by designation
+   * Get staff members by designation
    */
-  async getStaffByDesignation(designation: string): Promise<Staff[]> {
+  getStaffByDesignation: async (designation: Designation): Promise<Staff[]> => {
     try {
-      const response = await apiService.get<StaffResponse>(ENDPOINTS.STAFF.GET_BY_DESIGNATION(designation));
+      const response = await fetch(`${API_BASE_URL}${ENDPOINTS.STAFF.GET_BY_DESIGNATION(designation)}`);
+      const data = await response.json();
       
-      if (!response.success) {
-        toast.error(response.message || 'Failed to fetch staff');
-        return [];
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to get staff members');
       }
       
-      return Array.isArray(response.data) ? response.data : [];
+      return Array.isArray(data.data) ? data.data : [data.data].filter(Boolean);
     } catch (error) {
-      console.error('Get staff by designation error:', error);
-      toast.error('Failed to fetch staff');
-      return [];
+      console.error(`Error fetching staff members with designation ${designation}:`, error);
+      throw error;
     }
-  }
-
+  },
+  
   /**
-   * Create a new staff member
+   * Create new staff member
    */
-  async createStaff(staffData: Omit<Staff, 'id'>): Promise<Staff | null> {
+  createStaff: async (staffData: Omit<Staff, 'id'>): Promise<Staff> => {
     try {
-      const response = await apiService.post<StaffResponse>(ENDPOINTS.STAFF.CREATE, staffData);
-      
-      if (!response.success || !response.data) {
-        toast.error(response.message || 'Failed to create staff member');
-        return null;
-      }
-      
-      toast.success('Staff member created successfully');
-      return response.data as Staff;
-    } catch (error) {
-      console.error('Create staff error:', error);
-      toast.error('Failed to create staff member');
-      return null;
-    }
-  }
-
-  /**
-   * Update an existing staff member
-   */
-  async updateStaff(id: string, staffData: Partial<Staff>): Promise<Staff | null> {
-    try {
-      const response = await apiService.put<StaffResponse>(ENDPOINTS.STAFF.UPDATE, {
-        id,
-        ...staffData,
+      const response = await fetch(`${API_BASE_URL}${ENDPOINTS.STAFF.CREATE}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(staffData),
       });
       
-      if (!response.success || !response.data) {
-        toast.error(response.message || 'Failed to update staff member');
-        return null;
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to create staff member');
       }
       
-      toast.success('Staff member updated successfully');
-      return response.data as Staff;
+      return data.data;
     } catch (error) {
-      console.error('Update staff error:', error);
-      toast.error('Failed to update staff member');
-      return null;
+      console.error('Error creating staff member:', error);
+      throw error;
     }
-  }
-
+  },
+  
   /**
-   * Delete a staff member
+   * Update staff member
    */
-  async deleteStaff(id: string): Promise<boolean> {
+  updateStaff: async (id: string, staffData: Partial<Staff>): Promise<Staff> => {
     try {
-      const response = await apiService.delete<StaffResponse>(ENDPOINTS.STAFF.DELETE, { id });
+      const response = await fetch(`${API_BASE_URL}${ENDPOINTS.STAFF.UPDATE}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id, ...staffData }),
+      });
       
-      if (!response.success) {
-        toast.error(response.message || 'Failed to delete staff member');
-        return false;
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to update staff member');
       }
       
-      toast.success('Staff member deleted successfully');
+      return data.data;
+    } catch (error) {
+      console.error(`Error updating staff member with ID ${id}:`, error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Delete staff member
+   */
+  deleteStaff: async (id: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}${ENDPOINTS.STAFF.DELETE}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+      });
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to delete staff member');
+      }
+      
       return true;
     } catch (error) {
-      console.error('Delete staff error:', error);
-      toast.error('Failed to delete staff member');
-      return false;
+      console.error(`Error deleting staff member with ID ${id}:`, error);
+      throw error;
     }
-  }
+  },
 
   /**
-   * Get all departments with divisions
+   * Get all departments with their divisions
    */
-  async getAllDepartmentsWithDivisions(): Promise<Department[]> {
+  getAllDepartmentsWithDivisions: async (): Promise<Department[]> => {
     try {
-      const response = await apiService.get<{ success: boolean; data?: Department[] }>(
-        ENDPOINTS.DEPARTMENTS.GET_WITH_DIVISIONS
-      );
+      const response = await fetch(`${API_BASE_URL}${ENDPOINTS.DEPARTMENTS.GET_WITH_DIVISIONS}`);
+      const data = await response.json();
       
-      if (!response.success || !response.data) {
-        toast.error(response.message || 'Failed to fetch departments');
-        return [];
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to get departments with divisions');
       }
       
-      return response.data;
+      return data.data || [];
     } catch (error) {
-      console.error('Get departments error:', error);
-      toast.error('Failed to fetch departments');
-      return [];
+      console.error('Error fetching departments with divisions:', error);
+      throw error;
     }
   }
-}
-
-export const staffService = new StaffService();
+};
