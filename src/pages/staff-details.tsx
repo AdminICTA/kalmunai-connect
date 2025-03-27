@@ -54,15 +54,12 @@ const StaffDetails = () => {
     if (results.length === 0) {
       toast.info("No staff found matching your search");
     } else if (results.length === 1) {
-      // If only one result, directly open the staff details
       handleStaffSelect(results[0]);
     }
-    // Otherwise, just display the list of results
   };
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    // Clear search results when switching tabs
     if (value === "departments") {
       setSearchResults([]);
     }
@@ -126,7 +123,6 @@ const StaffDetails = () => {
                                   variant="outline" 
                                   className="w-full"
                                   onClick={() => {
-                                    // Implementation to show staff in this division
                                     toast.info(`Showing staff in ${division.name} division`);
                                   }}
                                 >
@@ -162,9 +158,7 @@ const StaffDetails = () => {
             staff={selectedStaff}
             departments={departments}
             onUpdate={() => {
-              // Refresh staff data after update
               if (searchResults.length > 0) {
-                // Re-fetch search results
                 const lastSearch = document.querySelector('input')?.value;
                 if (lastSearch) {
                   StaffService.searchStaff(lastSearch).then(handleSearchResults);

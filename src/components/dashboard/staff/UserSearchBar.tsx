@@ -1,13 +1,13 @@
 
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { UserSearchBarProps } from "./UserSearchBar.d.ts";
 
-interface UserSearchBarProps {
-  searchTerm: string;
-  setSearchTerm: (value: string) => void;
-}
+const UserSearchBar = ({ onSearch }: UserSearchBarProps) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearch(e.target.value);
+  };
 
-const UserSearchBar = ({ searchTerm, setSearchTerm }: UserSearchBarProps) => {
   return (
     <div className="flex items-center space-x-2 mb-4">
       <div className="relative flex-1">
@@ -16,8 +16,7 @@ const UserSearchBar = ({ searchTerm, setSearchTerm }: UserSearchBarProps) => {
           type="search"
           placeholder="Search by name, email, QR code or phone..."
           className="pl-8 border-kalmunai-teal/20 focus:border-kalmunai-teal focus:ring-kalmunai-teal/30"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleSearch}
         />
       </div>
     </div>

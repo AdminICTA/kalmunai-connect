@@ -138,7 +138,10 @@ const PublicUserManagement = () => {
       )}
 
       <div className="fixed bottom-4 right-4 z-50">
-        <UserNotifications notifications={notifications} onClearAll={handleClearNotifications} />
+        <UserNotifications 
+          notifications={notifications} 
+          onClearAll={handleClearNotifications} 
+        />
       </div>
     </div>
   );
